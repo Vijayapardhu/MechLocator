@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MechLocator</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-in': 'bounceIn 0.6s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
+        .animate-bounce-in { animation: bounceIn 0.6s ease-out; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .bg-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Logo and Header -->
+        <div class="text-center animate-bounce-in">
+            <div class="flex justify-center">
+                <div class="flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-lg">
+                    <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-white">
+                Welcome to MechLocator
+            </h2>
+            <p class="mt-2 text-sm text-gray-200">
+                Sign in to your account to continue
+            </p>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden animate-slide-up">
+            <div class="flex">
+                <button id="loginTab" onclick="showLoginForm()" class="flex-1 py-4 text-center font-medium text-primary-600 bg-primary-50 border-b-2 border-primary-600 transition-colors">
+                    Sign In
+                </button>
+                <button id="registerTab" onclick="showRegisterForm()" class="flex-1 py-4 text-center font-medium text-gray-500 bg-gray-50 border-b-2 border-transparent hover:bg-gray-100 transition-colors">
+                    Create Account
+                </button>
+            </div>
+
+            <div class="p-8">
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                </svg>
+                            </div>
+                            <input id="loginEmail" name="email" type="email" required 
+                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="Enter your email">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                            <input id="loginPassword" name="password" type="password" required 
+                                class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="Enter your password">
+                            <button type="button" onclick="togglePassword('loginPassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg id="loginPasswordIcon" class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="rememberMe" name="rememberMe" type="checkbox" 
+                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                            <label for="rememberMe" class="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
+                        </div>
+                        <div class="text-sm">
+                            <a href="#" onclick="showForgotPassword()" class="font-medium text-primary-600 hover:text-primary-500 transition-colors">
+                                Forgot password?
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" id="loginBtn" 
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            <span id="loginBtnText">Sign In</span>
+                            <div id="loginBtnSpinner" class="loading-spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">
+                            Don't have an account? 
+                            <a href="#" onclick="showRegisterForm()" class="font-medium text-primary-600 hover:text-primary-500 transition-colors">
+                                Sign up here
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="space-y-6 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="registerFirstName" class="block text-sm font-medium text-gray-700 mb-2">
+                                First Name
+                            </label>
+                            <input id="registerFirstName" name="firstName" type="text" required 
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="First name">
+                        </div>
+                        <div>
+                            <label for="registerLastName" class="block text-sm font-medium text-gray-700 mb-2">
+                                Last Name
+                            </label>
+                            <input id="registerLastName" name="lastName" type="text" required 
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="Last name">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="registerUsername" class="block text-sm font-medium text-gray-700 mb-2">
+                            Username
+                        </label>
+                        <input id="registerUsername" name="username" type="text" required 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                            placeholder="Choose a username">
+                    </div>
+
+                    <div>
+                        <label for="registerEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <input id="registerEmail" name="email" type="email" required 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                            placeholder="Enter your email">
+                    </div>
+
+                    <div>
+                        <label for="registerPhone" class="block text-sm font-medium text-gray-700 mb-2">
+                            Phone Number (Optional)
+                        </label>
+                        <input id="registerPhone" name="phone" type="tel" 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                            placeholder="Enter your phone number">
+                    </div>
+
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <input id="registerPassword" name="password" type="password" required 
+                                class="block w-full pl-3 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="Create a password">
+                            <button type="button" onclick="togglePassword('registerPassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg id="registerPasswordIcon" class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
+                    </div>
+
+                    <div>
+                        <button type="submit" id="registerBtn" 
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            <span id="registerBtnText">Create Account</span>
+                            <div id="registerBtnSpinner" class="loading-spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">
+                            Already have an account? 
+                            <a href="#" onclick="showLoginForm()" class="font-medium text-primary-600 hover:text-primary-500 transition-colors">
+                                Sign in here
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <!-- Forgot Password Form -->
+                <form id="forgotPasswordForm" class="space-y-6 hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-900">Reset Password</h3>
+                        <p class="text-sm text-gray-600">Enter your email to receive reset instructions</p>
+                    </div>
+
+                    <div>
+                        <label for="forgotEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <input id="forgotEmail" name="email" type="email" required 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                            placeholder="Enter your email">
+                    </div>
+
+                    <div>
+                        <button type="submit" id="forgotBtn" 
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            <span id="forgotBtnText">Send Reset Link</span>
+                            <div id="forgotBtnSpinner" class="loading-spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="#" onclick="showLoginForm()" class="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors">
+                            Back to Sign In
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center animate-fade-in">
+            <a href="index.html" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
+        <div id="messageContent" class="rounded-lg p-4 shadow-lg max-w-sm">
+            <div class="flex items-center">
+                <div id="messageIcon" class="flex-shrink-0 mr-3"></div>
+                <div>
+                    <p id="messageText" class="text-sm font-medium"></p>
+                </div>
+                <button onclick="hideMessage()" class="ml-4 flex-shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>

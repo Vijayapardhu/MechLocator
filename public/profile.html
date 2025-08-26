@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - MechLocator</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-in': 'bounceIn 0.6s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
+        .animate-bounce-in { animation: bounceIn 0.6s ease-out; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">MechLocator</h1>
+                        <p class="text-xs text-gray-500">Profile</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-primary-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                        </svg>
+                    </a>
+                    
+                    <a href="index.html" class="text-gray-600 hover:text-primary-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Profile Settings</h2>
+                <p class="text-gray-600">Manage your account information and preferences</p>
+            </div>
+
+            <!-- Profile Tabs -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-6">
+                        <button id="profileTab" onclick="showProfileSection()" class="py-4 px-1 border-b-2 border-primary-500 text-sm font-medium text-primary-600">
+                            Profile Information
+                        </button>
+                        <button id="securityTab" onclick="showSecuritySection()" class="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            Security
+                        </button>
+                        <button id="preferencesTab" onclick="showPreferencesSection()" class="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            Preferences
+                        </button>
+                        <button id="activityTab" onclick="showActivitySection()" class="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            Activity
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Profile Information Section -->
+                    <div id="profileSection" class="animate-fade-in">
+                        <div class="flex items-center space-x-6 mb-8">
+                            <div class="relative">
+                                <img id="profileAvatar" src="https://via.placeholder.com/120" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
+                                <button onclick="document.getElementById('avatarInput').click()" class="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full hover:bg-primary-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                                <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarChange(event)">
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900" id="profileName">Loading...</h3>
+                                <p class="text-gray-600" id="profileEmail">loading@email.com</p>
+                                <p class="text-sm text-gray-500">Member since <span id="memberSince">Loading...</span></p>
+                            </div>
+                        </div>
+
+                        <form id="profileForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                                    <input type="text" id="firstName" name="firstName" required 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                                    <input type="text" id="lastName" name="lastName" required 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="username" name="username" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="email" name="email" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" id="saveProfileBtn" 
+                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                                    <span id="saveProfileText">Save Changes</span>
+                                    <div id="saveProfileSpinner" class="loading-spinner ml-2 hidden"></div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Security Section -->
+                    <div id="securitySection" class="hidden animate-fade-in">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Security Settings</h3>
+                        
+                        <form id="passwordForm" class="space-y-6">
+                            <div>
+                                <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input type="password" id="currentPassword" name="currentPassword" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="newPassword" name="newPassword" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
+                            </div>
+
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" id="changePasswordBtn" 
+                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                                    <span id="changePasswordText">Change Password</span>
+                                    <div id="changePasswordSpinner" class="loading-spinner ml-2 hidden"></div>
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr class="my-8">
+
+                        <div class="space-y-4">
+                            <h4 class="text-md font-medium text-gray-900">Account Actions</h4>
+                            
+                            <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                                <div>
+                                    <h5 class="text-sm font-medium text-red-800">Delete Account</h5>
+                                    <p class="text-sm text-red-600">Permanently delete your account and all associated data</p>
+                                </div>
+                                <button onclick="showDeleteAccountModal()" 
+                                    class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferences Section -->
+                    <div id="preferencesSection" class="hidden animate-fade-in">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Preferences</h3>
+                        
+                        <form id="preferencesForm" class="space-y-6">
+                            <div>
+                                <h4 class="text-md font-medium text-gray-900 mb-4">Notifications</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="emailNotifications" name="emailNotifications" 
+                                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="emailNotifications" class="ml-2 block text-sm text-gray-700">
+                                            Email notifications for appointments
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="smsNotifications" name="smsNotifications" 
+                                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="smsNotifications" class="ml-2 block text-sm text-gray-700">
+                                            SMS notifications for urgent updates
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="marketingEmails" name="marketingEmails" 
+                                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="marketingEmails" class="ml-2 block text-sm text-gray-700">
+                                            Receive marketing emails and updates
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-md font-medium text-gray-900 mb-4">Privacy</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="profileVisibility" name="profileVisibility" 
+                                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="profileVisibility" class="ml-2 block text-sm text-gray-700">
+                                            Make my profile visible to mechanics
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="shareData" name="shareData" 
+                                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="shareData" class="ml-2 block text-sm text-gray-700">
+                                            Allow data sharing for service improvements
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" id="savePreferencesBtn" 
+                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                                    <span id="savePreferencesText">Save Preferences</span>
+                                    <div id="savePreferencesSpinner" class="loading-spinner ml-2 hidden"></div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Activity Section -->
+                    <div id="activitySection" class="hidden animate-fade-in">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
+                        
+                        <div id="activityList" class="space-y-4">
+                            <div class="text-center py-8">
+                                <div class="loading-spinner mx-auto mb-4"></div>
+                                <p class="text-gray-500">Loading activity...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div id="deleteAccountModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full p-6">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-medium text-gray-900">Delete Account</h3>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <p class="text-sm text-gray-600">
+                        Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including:
+                    </p>
+                    <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
+                        <li>Profile information</li>
+                        <li>Appointment history</li>
+                        <li>Vehicle records</li>
+                        <li>Reviews and ratings</li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="hideDeleteAccountModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="deleteAccount()" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Container -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
+        <div id="messageContent" class="rounded-lg p-4 shadow-lg max-w-sm">
+            <div class="flex items-center">
+                <div id="messageIcon" class="flex-shrink-0 mr-3"></div>
+                <div>
+                    <p id="messageText" class="text-sm font-medium"></p>
+                </div>
+                <button onclick="hideMessage()" class="ml-4 flex-shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/profile.js"></script>
+</body>
+</html>

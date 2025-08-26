@@ -9,10 +9,32 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    initializeMap();
+    loadGoogleMapsScript();
     loadAdminMechanics();
     setupEventListeners();
 });
+
+// Fetch Google Maps API key and load the script
+async function loadGoogleMapsScript() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/config`);
+        const config = await response.json();
+        const apiKey = config.googleMapsApiKey;
+
+        if (!apiKey) {
+            throw new Error('Google Maps API key not found.');
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initializeMap`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    } catch (error) {
+        console.error('Failed to load Google Maps script:', error);
+        alert('Could not load map. Please check the configuration.');
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {

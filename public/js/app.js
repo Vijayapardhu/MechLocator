@@ -318,21 +318,38 @@ function closeModal() {
 function showMainPage() {
     document.getElementById('mainPage').classList.remove('hidden');
     document.getElementById('adminPage').classList.add('hidden');
+    document.getElementById('authPage').classList.add('hidden');
     
     // Update navigation styles
     document.querySelector('button[onclick="showMainPage()"]').classList.add('bg-primary-100', 'text-primary-700');
     document.querySelector('button[onclick="showAdminPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
+    document.querySelector('button[onclick="showAuthPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
 }
 
 function showAdminPage() {
     document.getElementById('mainPage').classList.add('hidden');
     document.getElementById('adminPage').classList.remove('hidden');
+    document.getElementById('authPage').classList.add('hidden');
     
     // Update navigation styles
     document.querySelector('button[onclick="showMainPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
     document.querySelector('button[onclick="showAdminPage()"]').classList.add('bg-primary-100', 'text-primary-700');
+    document.querySelector('button[onclick="showAuthPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
     
     loadAdminMechanics();
+}
+
+function showAuthPage() {
+    document.getElementById('mainPage').classList.add('hidden');
+    document.getElementById('adminPage').classList.add('hidden');
+    document.getElementById('authPage').classList.remove('hidden');
+    
+    // Update navigation styles
+    document.querySelector('button[onclick="showMainPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
+    document.querySelector('button[onclick="showAdminPage()"]').classList.remove('bg-primary-100', 'text-primary-700');
+    document.querySelector('button[onclick="showAuthPage()"]').classList.add('bg-primary-100', 'text-primary-700');
+    
+    showLoginForm();
 }
 
 // Admin functions
@@ -448,5 +465,92 @@ function editMechanic(mechanicId) {
 document.getElementById('mechanicModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeModal();
+    }
+});
+
+// Authentication functions
+function showLoginForm() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('loginTab').classList.add('text-primary-600', 'border-primary-600');
+    document.getElementById('loginTab').classList.remove('text-gray-500', 'border-transparent');
+    document.getElementById('registerTab').classList.remove('text-primary-600', 'border-primary-600');
+    document.getElementById('registerTab').classList.add('text-gray-500', 'border-transparent');
+}
+
+function showRegisterForm() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('registerTab').classList.add('text-primary-600', 'border-primary-600');
+    document.getElementById('registerTab').classList.remove('text-gray-500', 'border-transparent');
+    document.getElementById('loginTab').classList.remove('text-primary-600', 'border-primary-600');
+    document.getElementById('loginTab').classList.add('text-gray-500', 'border-transparent');
+}
+
+// Handle login form submission
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'dashboard.html';
+        } else {
+            alert(data.error || 'Login failed');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+    }
+});
+
+// Handle register form submission
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        username: document.getElementById('registerUsername').value,
+        email: document.getElementById('registerEmail').value,
+        password: document.getElementById('registerPassword').value,
+        firstName: document.getElementById('registerFirstName').value,
+        lastName: document.getElementById('registerLastName').value,
+        phone: document.getElementById('registerPhone').value
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'dashboard.html';
+        } else {
+            alert(data.error || 'Registration failed');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert('Registration failed. Please try again.');
     }
 });

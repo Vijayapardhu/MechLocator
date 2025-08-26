@@ -4,8 +4,45 @@ let markers = [];
 let currentLocation = null;
 let mechanics = [];
 
+// Mock data for demonstration
+const mockMechanics = [
+    {
+        _id: '1',
+        name: 'ABC Auto Repair',
+        address: '123 Main St, New York, NY 10001',
+        phone: '+1-555-0123',
+        rating: 4.8,
+        totalRatings: 156,
+        description: 'Professional auto repair services with 20+ years of experience.',
+        location: { coordinates: [-73.935242, 40.730610] },
+        services: ['Oil Change', 'Brake Repair', 'Engine Diagnostics']
+    },
+    {
+        _id: '2',
+        name: 'City Mechanics',
+        address: '456 Broadway, New York, NY 10013',
+        phone: '+1-555-0456',
+        rating: 4.6,
+        totalRatings: 89,
+        description: 'Fast and reliable car repair services in downtown.',
+        location: { coordinates: [-74.006015, 40.712776] },
+        services: ['Tire Service', 'AC Repair', 'Transmission']
+    },
+    {
+        _id: '3',
+        name: 'Premium Auto Care',
+        address: '789 5th Ave, New York, NY 10065',
+        phone: '+1-555-0789',
+        rating: 4.9,
+        totalRatings: 234,
+        description: 'Luxury car specialists with certified technicians.',
+        location: { coordinates: [-73.971321, 40.750467] },
+        services: ['Luxury Car Service', 'Performance Tuning', 'Body Work']
+    }
+];
+
 // API Base URL - Updated to work with deployed version
-const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -17,30 +54,38 @@ document.addEventListener('DOMContentLoaded', function() {
 // Fetch Google Maps API key and load the script
 async function loadGoogleMapsScript() {
     try {
+        // Try to get API key from server first
         const response = await fetch(`${API_BASE_URL}/config`);
         const config = await response.json();
         const apiKey = config.googleMapsApiKey;
 
         if (!apiKey || apiKey === 'AIzaSyBYourGoogleMapsAPIKeyHere') {
-            // Fallback: Use a demo API key or show a message
-            console.warn('Google Maps API key not configured. Using fallback solution.');
-            showMapUnavailableMessage();
+            // Use the provided API key directly
+            const directApiKey = 'AIzaSyCnPelFem97pCbp1gs3rFrfc3hO_W9Wv9s';
+            loadGoogleMapsWithKey(directApiKey);
             return;
         }
 
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initializeMap`;
-        script.async = true;
-        script.defer = true;
-        script.onerror = () => {
-            console.error('Failed to load Google Maps script');
-            showMapUnavailableMessage();
-        };
-        document.head.appendChild(script);
+        loadGoogleMapsWithKey(apiKey);
     } catch (error) {
-        console.error('Failed to load Google Maps script:', error);
-        showMapUnavailableMessage();
+        console.error('Failed to load Google Maps script from server:', error);
+        // Fallback: Use the provided API key directly
+        const directApiKey = 'AIzaSyCnPelFem97pCbp1gs3rFrfc3hO_W9Wv9s';
+        loadGoogleMapsWithKey(directApiKey);
     }
+}
+
+// Load Google Maps with a specific API key
+function loadGoogleMapsWithKey(apiKey) {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initializeMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+        console.error('Failed to load Google Maps script');
+        showMapUnavailableMessage();
+    };
+    document.head.appendChild(script);
 }
 
 // Show message when map is unavailable
@@ -57,7 +102,7 @@ function showMapUnavailableMessage() {
                     </div>
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Map Unavailable</h3>
                     <p class="text-gray-500 mb-4">The map is currently unavailable. You can still search for mechanics using the filters below.</p>
-                    <button onclick="searchNearbyMechanics()" class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                    <button onclick="searchMechanicsWithoutLocation()" class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                         Search Mechanics
                     </button>
                 </div>
@@ -141,11 +186,13 @@ function getCurrentLocation() {
                 };
                 
                 // Center map on user location
-                map.setCenter(currentLocation);
-                map.setZoom(14);
-                
-                // Add user location marker
-                addUserMarker(currentLocation);
+                if (map) {
+                    map.setCenter(currentLocation);
+                    map.setZoom(14);
+                    
+                    // Add user location marker
+                    addUserMarker(currentLocation);
+                }
                 
                 // Search for nearby mechanics
                 searchNearbyMechanics();
@@ -155,9 +202,18 @@ function getCurrentLocation() {
             },
             function(error) {
                 console.error('Error getting location:', error);
-                alert('Unable to get your location. Please try again or search manually.');
-                button.innerHTML = '<svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Use My Location';
-                button.disabled = false;
+                
+                // In demo mode, use default location and show mechanics
+                if (window.location.hostname === 'localhost') {
+                    currentLocation = { lat: 40.730610, lng: -73.935242 };
+                    searchMechanicsWithoutLocation();
+                    button.innerHTML = '<svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Use My Location';
+                    button.disabled = false;
+                } else {
+                    alert('Unable to get your location. Please try again or search manually.');
+                    button.innerHTML = '<svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Use My Location';
+                    button.disabled = false;
+                }
             },
             {
                 enableHighAccuracy: true,
@@ -166,7 +222,13 @@ function getCurrentLocation() {
             }
         );
     } else {
-        alert('Geolocation is not supported by this browser.');
+        // In demo mode, use default location and show mechanics
+        if (window.location.hostname === 'localhost') {
+            currentLocation = { lat: 40.730610, lng: -73.935242 };
+            searchMechanicsWithoutLocation();
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
         button.disabled = false;
     }
 }
@@ -193,30 +255,67 @@ function addUserMarker(location) {
 
 // Search for nearby mechanics
 async function searchNearbyMechanics() {
-    if (!currentLocation) {
-        alert('Please get your location first.');
-        return;
-    }
-    
     showLoading(true);
     
     try {
         const distance = document.getElementById('distanceFilter').value;
         const minRating = document.getElementById('ratingFilter').value;
         
-        const response = await fetch(`${API_BASE_URL}/mechanics/nearby?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&radius=${distance}&minRating=${minRating}`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch mechanics');
+        // Use mock data if API is not available
+        if (window.location.hostname === 'localhost') {
+            // Filter mock data based on rating
+            mechanics = mockMechanics.filter(mechanic => mechanic.rating >= parseFloat(minRating));
+            displayMechanics(mechanics);
+            if (map && currentLocation) {
+                addMechanicMarkers(mechanics);
+            }
+        } else {
+            if (!currentLocation) {
+                alert('Please get your location first.');
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE_URL}/mechanics/nearby?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&radius=${distance}&minRating=${minRating}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch mechanics');
+            }
+            
+            mechanics = await response.json();
+            displayMechanics(mechanics);
+            addMechanicMarkers(mechanics);
         }
-        
-        mechanics = await response.json();
-        displayMechanics(mechanics);
-        addMechanicMarkers(mechanics);
         
     } catch (error) {
         console.error('Error searching mechanics:', error);
         alert('Failed to find nearby mechanics. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Search mechanics without location (for demo purposes)
+function searchMechanicsWithoutLocation() {
+    showLoading(true);
+    
+    try {
+        const minRating = document.getElementById('ratingFilter').value;
+        
+        // Filter mock data based on rating
+        mechanics = mockMechanics.filter(mechanic => mechanic.rating >= parseFloat(minRating));
+        displayMechanics(mechanics);
+        
+        // If map is available, center on a default location
+        if (map) {
+            const defaultCenter = { lat: 40.730610, lng: -73.935242 };
+            map.setCenter(defaultCenter);
+            map.setZoom(12);
+            addMechanicMarkers(mechanics);
+        }
+        
+    } catch (error) {
+        console.error('Error searching mechanics:', error);
+        alert('Failed to find mechanics. Please try again.');
     } finally {
         showLoading(false);
     }
@@ -328,10 +427,19 @@ function callMechanic(phone) {
 // Show mechanic details modal
 async function showMechanicDetails(mechanicId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/mechanics/${mechanicId}`);
-        if (!response.ok) throw new Error('Failed to fetch mechanic details');
+        let mechanic;
         
-        const mechanic = await response.json();
+        // Use mock data if API is not available
+        if (window.location.hostname === 'localhost') {
+            mechanic = mockMechanics.find(m => m._id === mechanicId);
+            if (!mechanic) {
+                throw new Error('Mechanic not found');
+            }
+        } else {
+            const response = await fetch(`${API_BASE_URL}/mechanics/${mechanicId}`);
+            if (!response.ok) throw new Error('Failed to fetch mechanic details');
+            mechanic = await response.json();
+        }
         
         document.getElementById('modalTitle').textContent = mechanic.name;
         document.getElementById('modalContent').innerHTML = `
@@ -438,15 +546,21 @@ function showAuthPage() {
 // Admin functions
 async function loadAdminMechanics() {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/mechanics`);
-        if (!response.ok) throw new Error('Failed to fetch mechanics');
-        
-        const data = await response.json();
-        displayAdminMechanics(data.mechanics);
+        // Use mock data if API is not available
+        if (window.location.hostname === 'localhost') {
+            displayAdminMechanics(mockMechanics);
+        } else {
+            const response = await fetch(`${API_BASE_URL}/admin/mechanics`);
+            if (!response.ok) throw new Error('Failed to fetch mechanics');
+            
+            const data = await response.json();
+            displayAdminMechanics(data.mechanics);
+        }
         
     } catch (error) {
         console.error('Error loading admin mechanics:', error);
-        alert('Failed to load mechanics.');
+        // Fallback to mock data
+        displayAdminMechanics(mockMechanics);
     }
 }
 

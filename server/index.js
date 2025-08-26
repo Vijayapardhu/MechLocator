@@ -62,14 +62,14 @@ app.use(express.static('public'));
 // API Routes
 app.use('/api/mechanics', mechanicRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/chat', chatRoutes);
+// app.use('/api/reviews', reviewRoutes);
+// app.use('/api/appointments', appointmentRoutes);
+// app.use('/api/vehicles', vehicleRoutes);
+// app.use('/api/admin', adminRoutes);
+// app.use('/api/analytics', analyticsRoutes);
+// app.use('/api/notifications', notificationRoutes);
+// app.use('/api/payments', paymentRoutes);
+// app.use('/api/chat', chatRoutes);
 
 // Config endpoint
 app.get('/api/config', (req, res) => {

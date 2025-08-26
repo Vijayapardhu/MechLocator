@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-const conn = await mongoose.connect(process.env.MONGODB_URI, {
+        const conn = await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
@@ -14,7 +14,9 @@ const conn = await mongoose.connect(process.env.MONGODB_URI, {
         
     } catch (error) {
         console.error('Database connection error:', error);
-        process.exit(1);
+        console.log('Server will continue running with limited functionality.');
+        console.log('Please whitelist your IP address in MongoDB Atlas or check your connection string.');
+        // Don't exit the process, let the server continue with limited functionality
     }
 };
 

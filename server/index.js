@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -74,7 +74,7 @@ app.use('/api/auth', authRoutes);
 // Config endpoint
 app.get('/api/config', (req, res) => {
     res.json({
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
+        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyCnPelFem97pCbp1gs3rFrfc3hO_W9Wv9s'
     });
 });
 

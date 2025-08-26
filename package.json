@@ -1,0 +1,21 @@
+{
+  "name": "mechlocator",
+  "version": "1.0.0",
+  "description": "A mechanic finder application with geolocation and MongoDB",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "test": "cd server && npm test && cd ../client && npm test",
+    "lint": "cd server && npm run lint && cd ../client && npm run lint"
+  },
+  "keywords": ["mechanic", "geolocation", "mongodb", "react", "nodejs"],
+  "author": "MechLocator Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

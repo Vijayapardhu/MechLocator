@@ -4,8 +4,8 @@ let markers = [];
 let currentLocation = null;
 let mechanics = [];
 
-// API Base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+// API Base URL - Updated to work with deployed version
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,19 +21,80 @@ async function loadGoogleMapsScript() {
         const config = await response.json();
         const apiKey = config.googleMapsApiKey;
 
-        if (!apiKey) {
-            throw new Error('Google Maps API key not found.');
+        if (!apiKey || apiKey === 'AIzaSyBYourGoogleMapsAPIKeyHere') {
+            // Fallback: Use a demo API key or show a message
+            console.warn('Google Maps API key not configured. Using fallback solution.');
+            showMapUnavailableMessage();
+            return;
         }
 
         const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initializeMap`;
         script.async = true;
         script.defer = true;
+        script.onerror = () => {
+            console.error('Failed to load Google Maps script');
+            showMapUnavailableMessage();
+        };
         document.head.appendChild(script);
     } catch (error) {
         console.error('Failed to load Google Maps script:', error);
-        alert('Could not load map. Please check the configuration.');
+        showMapUnavailableMessage();
     }
+}
+
+// Show message when map is unavailable
+function showMapUnavailableMessage() {
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        mapContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-gray-100 rounded-lg">
+                <div class="text-center p-8">
+                    <div class="text-gray-400 mb-4">
+                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Map Unavailable</h3>
+                    <p class="text-gray-500 mb-4">The map is currently unavailable. You can still search for mechanics using the filters below.</p>
+                    <button onclick="searchNearbyMechanics()" class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                        Search Mechanics
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Also show a notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded z-50';
+    notification.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm">Map is unavailable. You can still search for mechanics.</p>
+            </div>
+            <div class="ml-auto pl-3">
+                <button onclick="this.parentElement.parentElement.remove()" class="text-yellow-400 hover:text-yellow-600">
+                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto-remove notification after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // Setup event listeners

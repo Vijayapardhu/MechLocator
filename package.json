@@ -4,16 +4,16 @@
   "description": "A web application for discovering nearby mechanic shops",
   "main": "server/index.js",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server\" \"npm run serve\"",
     "server": "cd server && npm run dev",
-    "client": "cd client && npm start",
-    "build": "cd client && npm run build",
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+    "serve": "npx http-server public -p 3000 -c-1",
+    "install-all": "npm install && cd server && npm install"
   },
   "keywords": ["mechanics", "location", "maps", "mongodb"],
   "author": "MechLocator Team",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1"
   }
 }

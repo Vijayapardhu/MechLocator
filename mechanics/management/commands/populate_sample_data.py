@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from mechanics.models import Mechanic, UserProfile
+from mechanics.models import Mechanic, UserProfile, MechanicImage, CustomerFeedback, FeedbackImage
 from decimal import Decimal
 import random
 
@@ -33,11 +33,17 @@ class Command(BaseCommand):
         # Create sample users
         self.create_sample_users(num_users)
 
-        # Create sample mechanics
+        # Create sample mechanics (with feedback)
         self.create_sample_mechanics(num_mechanics)
 
         self.stdout.write(
             self.style.SUCCESS('Sample data creation completed successfully!')
+        )
+        self.stdout.write(
+            self.style.SUCCESS('Note: Mechanics have been created with sample customer feedback.')
+        )
+        self.stdout.write(
+            self.style.SUCCESS('You can add images through the Django admin interface.')
         )
 
     def create_sample_users(self, num_users):
@@ -240,7 +246,71 @@ class Command(BaseCommand):
                 )
                 
                 self.stdout.write(f'Created mechanic: {mechanic.name} at {mechanic.latitude}, {mechanic.longitude}')
+                
+                # Add sample feedback for some mechanics
+                if random.random() > 0.5:  # 50% chance
+                    self.create_sample_feedback(mechanic)
 
         self.stdout.write(
             self.style.SUCCESS(f'Successfully created {min(num_mechanics, len(mechanic_data))} mechanic shops')
         )
+    
+    def create_sample_feedback(self, mechanic):
+        """Create sample customer feedback for a mechanic."""
+        feedback_templates = [
+            {
+                'name': 'John Smith',
+                'rating': 5.0,
+                'comment': 'Excellent service! The team was professional and fixed my car quickly. Highly recommended!'
+            },
+            {
+                'name': 'Sarah Johnson',
+                'rating': 4.5,
+                'comment': 'Very satisfied with the repair work. The staff was friendly and the price was reasonable.'
+            },
+            {
+                'name': 'Mike Williams',
+                'rating': 4.0,
+                'comment': 'Good service overall. Took a bit longer than expected but the quality was great.'
+            },
+            {
+                'name': 'Emily Davis',
+                'rating': 5.0,
+                'comment': 'Best mechanic in town! They go above and beyond to ensure customer satisfaction.'
+            },
+            {
+                'name': 'Robert Brown',
+                'rating': 4.5,
+                'comment': 'Professional and knowledgeable staff. Fair pricing and quality work.'
+            },
+            {
+                'name': 'Lisa Martinez',
+                'rating': 3.5,
+                'comment': 'Decent service. Could improve communication about repair timeline.'
+            },
+            {
+                'name': 'David Wilson',
+                'rating': 5.0,
+                'comment': 'Outstanding! Fixed my transmission issue perfectly. Will definitely return.'
+            },
+            {
+                'name': 'Jennifer Garcia',
+                'rating': 4.0,
+                'comment': 'Reliable and trustworthy. Happy with the brake repair they did.'
+            },
+        ]
+        
+        # Create 1-3 random feedback entries
+        num_feedbacks = random.randint(1, 3)
+        selected_feedbacks = random.sample(feedback_templates, min(num_feedbacks, len(feedback_templates)))
+        
+        for feedback_data in selected_feedbacks:
+            feedback = CustomerFeedback.objects.create(
+                mechanic=mechanic,
+                customer_name=feedback_data['name'],
+                rating=Decimal(str(feedback_data['rating'])),
+                comment=feedback_data['comment'],
+                is_approved=True
+            )
+            self.stdout.write(f'  - Added feedback from {feedback_data["name"]} ({feedback_data["rating"]}★)')
+

@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.conf import settings
 import json
 
-from .models import Mechanic, UserProfile, ActivityLog, SearchQuery
+from .models import Mechanic, UserProfile, ActivityLog, SearchQuery, MechanicImage, CustomerFeedback, FeedbackImage
 
 # Custom Admin Site (keeping for reference)
 class MechLocatorAdminSite(admin.AdminSite):
@@ -28,6 +28,14 @@ admin_site = MechLocatorAdminSite(name='mechlocator_admin')
 admin.site.site_header = "MechLocator Administration"
 admin.site.site_title = "MechLocator Admin"
 admin.site.index_title = "Welcome to MechLocator Administration"
+
+# Inline admin for MechanicImage
+class MechanicImageInline(admin.TabularInline):
+    model = MechanicImage
+    extra = 1
+    fields = ('image', 'caption', 'image_type', 'is_primary')
+    verbose_name = "Image"
+    verbose_name_plural = "Gallery Images"
 
 # Enhanced Mechanic Admin
 @admin.register(Mechanic)
@@ -44,6 +52,7 @@ class MechanicAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'distance_from_center']
     list_editable = ['is_active', 'rating']
     list_per_page = 25
+    inlines = [MechanicImageInline]
     
     fieldsets = (
         ('Basic Information', {
@@ -475,6 +484,70 @@ class SearchQueryAdmin(admin.ModelAdmin):
             'opts': self.model._meta,
         }
         return render(request, 'admin/mechanics/searchquery/analytics.html', context)
+
+# MechanicImage Admin
+@admin.register(MechanicImage)
+class MechanicImageAdmin(admin.ModelAdmin):
+    list_display = ['mechanic', 'image_type', 'caption', 'is_primary', 'uploaded_at']
+    list_filter = ['image_type', 'is_primary', 'uploaded_at']
+    search_fields = ['mechanic__name', 'caption']
+    readonly_fields = ['uploaded_at']
+    list_per_page = 50
+    
+    fieldsets = (
+        ('Image Information', {
+            'fields': ('mechanic', 'image', 'caption', 'image_type', 'is_primary')
+        }),
+        ('Metadata', {
+            'fields': ('uploaded_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+# Inline admin for FeedbackImage
+class FeedbackImageInline(admin.TabularInline):
+    model = FeedbackImage
+    extra = 1
+    fields = ('image', 'caption')
+    verbose_name = "Image"
+    verbose_name_plural = "Feedback Images"
+
+# CustomerFeedback Admin
+@admin.register(CustomerFeedback)
+class CustomerFeedbackAdmin(admin.ModelAdmin):
+    list_display = ['customer_name', 'mechanic', 'rating', 'is_approved', 'created_at']
+    list_filter = ['is_approved', 'rating', 'created_at']
+    search_fields = ['customer_name', 'mechanic__name', 'comment']
+    readonly_fields = ['created_at', 'updated_at']
+    list_editable = ['is_approved']
+    list_per_page = 50
+    inlines = [FeedbackImageInline]
+    
+    fieldsets = (
+        ('Feedback Information', {
+            'fields': ('mechanic', 'user', 'customer_name', 'rating', 'comment')
+        }),
+        ('Moderation', {
+            'fields': ('is_approved',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('mechanic', 'user')
+
+# FeedbackImage Admin
+@admin.register(FeedbackImage)
+class FeedbackImageAdmin(admin.ModelAdmin):
+    list_display = ['feedback', 'caption', 'uploaded_at']
+    list_filter = ['uploaded_at']
+    search_fields = ['feedback__customer_name', 'caption']
+    readonly_fields = ['uploaded_at']
+    list_per_page = 50
 
 # Note: Mechanic, ActivityLog, and SearchQuery are already registered with @admin.register decorators
 # User is registered in urls.py to avoid conflicts

@@ -16,6 +16,9 @@ A comprehensive, full-stack Django web application for connecting users with nea
 - **User Authentication**: Secure JWT-based authentication with OTP verification
 - **Profile Management**: Comprehensive user profiles with activity tracking
 - **Admin Dashboard**: Enhanced Django admin with analytics and bulk operations
+- **Image Gallery**: Support for multiple mechanic and shop photos
+- **Customer Feedback**: Review system with images and ratings
+- **Supabase Integration**: Optional cloud storage for images via Supabase
 
 ### 🛡️ Security Features
 - **OTP Authentication**: Email-based two-factor authentication
@@ -153,6 +156,37 @@ OTP_LENGTH=6
 4. Create an API key and add it to your `.env` file
 5. For production, restrict the API key to your domain
 
+### Supabase Setup (Optional - for Cloud Storage)
+
+MechLocator supports Supabase for cloud-based image storage. This is optional - the app works with local storage by default.
+
+1. **Create a Supabase Account**
+   - Go to [Supabase](https://supabase.com/)
+   - Sign up for a free account
+   - Create a new project
+
+2. **Set up Storage Bucket**
+   - Navigate to Storage in your Supabase dashboard
+   - Create a new bucket named `mechlocator-images` (or your preferred name)
+   - Set the bucket to public if you want direct access to images
+
+3. **Get API Credentials**
+   - Go to Project Settings > API
+   - Copy your Project URL and anon/public key
+   - Add these to your `.env` file:
+   ```env
+   SUPABASE_URL=your-project-url
+   SUPABASE_KEY=your-anon-key
+   SUPABASE_BUCKET=mechlocator-images
+   ```
+
+4. **Configure Bucket Policies** (Optional)
+   - Set up Row Level Security policies if needed
+   - Allow public read access for image display
+   - Restrict write access as needed
+
+**Note**: Without Supabase configuration, images will be stored locally in the `media/` directory.
+
 ## 📖 Usage Guide
 
 ### For Users
@@ -177,33 +211,47 @@ OTP_LENGTH=6
 
 1. **Managing Mechanics**
    - Add, edit, and delete mechanic shops
-   - Upload images and set working hours
+   - Upload multiple images for each shop (mechanic photos, shop photos, work samples)
+   - Set featured/primary images
    - Manage ratings and reviews
    - Bulk operations for efficiency
 
-2. **Analytics & Reports**
+2. **Managing Customer Feedback**
+   - Review and approve customer feedback
+   - View feedback with customer-uploaded images
+   - Moderate reviews before public display
+   - Track customer satisfaction ratings
+
+3. **Analytics & Reports**
    - View user activity statistics
    - Monitor mechanic performance
    - Track search queries and popular locations
    - Export data for analysis
 
-3. **System Management**
+4. **System Management**
    - User management and permissions
    - Activity logging and audit trails
    - System configuration and settings
+   - Image gallery management
 
 ## 🗄️ Database Models
 
 ### Core Models
 - **User**: Extended Django user model with additional fields
 - **Mechanic**: Mechanic shop information with location and services
+- **MechanicImage**: Multiple images per mechanic (shop photos, mechanic photos, work samples)
+- **CustomerFeedback**: Customer reviews and ratings with approval workflow
+- **FeedbackImage**: Images attached to customer feedback
 - **ActivityLog**: User and admin activity tracking
 - **OTP**: One-time password management
 - **LoginAttempt**: Login security tracking
 
 ### Relationships
 - Users can have multiple activity logs
-- Mechanics are associated with ratings and reviews
+- Mechanics can have multiple images (gallery)
+- Mechanics can have multiple customer feedbacks
+- Customer feedbacks can have multiple images
+- Feedbacks are linked to users (optional) for authenticated reviews
 - OTP codes are linked to user sessions
 - Login attempts track security events
 

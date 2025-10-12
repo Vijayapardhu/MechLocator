@@ -11,6 +11,7 @@ urlpatterns = [
     path('search/', views.search_mechanics, name='search_mechanics'),
     path('api/search/', views.search_mechanics, name='search_mechanics_api'),
     path('api/log-call/', views.log_call_api, name='log_call_api'),
+    path('api/feedback/<int:feedback_id>/vote/', views.vote_feedback, name='vote_feedback'),
     path('profile/', views.user_profile, name='user_profile'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),

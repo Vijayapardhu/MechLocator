@@ -6,9 +6,10 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import login
+from django.views.decorators.http import require_POST
 from geopy.distance import geodesic
-from .models import Mechanic, ActivityLog, MechanicImage, CustomerFeedback
-from .forms import UserRegistrationForm
+from .models import Mechanic, ActivityLog, MechanicImage, CustomerFeedback, FeedbackImage, FeedbackVote
+from .forms import UserRegistrationForm, CustomerFeedbackForm
 import json
 import logging
 
@@ -136,12 +137,37 @@ def mechanic_detail(request, mechanic_id):
     # Get approved customer feedback
     feedbacks = mechanic.feedbacks.filter(is_approved=True).order_by('-created_at')
     
+    # Handle feedback form submission
+    if request.method == 'POST':
+        form = CustomerFeedbackForm(request.POST, request.FILES)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.mechanic = mechanic
+            if request.user.is_authenticated:
+                feedback.user = request.user
+            feedback.save()
+            
+            # Handle image uploads
+            images = request.FILES.getlist('images')
+            for image in images:
+                FeedbackImage.objects.create(
+                    feedback=feedback,
+                    image=image
+                )
+            
+            messages.success(request, 'Thank you for your feedback! It will be reviewed before being published.')
+            log_activity(request, 'feedback', f'Feedback submitted for {mechanic.name}')
+            return redirect('mechanics:mechanic_detail', mechanic_id=mechanic.id)
+    else:
+        form = CustomerFeedbackForm()
+    
     log_activity(request, 'view', f'Mechanic detail viewed: {mechanic.name}')
     
     context = {
         'mechanic': mechanic,
         'mechanic_images': mechanic_images,
         'feedbacks': feedbacks,
+        'feedback_form': form,
         'user_lat': user_lat,
         'user_lng': user_lng,
     }
@@ -316,3 +342,95 @@ def log_call_api(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid request data'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+
+@require_POST
+def vote_feedback(request, feedback_id):
+    """API endpoint to vote on feedback (helpful/unhelpful)."""
+    try:
+        feedback = get_object_or_404(CustomerFeedback, id=feedback_id, is_approved=True)
+        data = json.loads(request.body)
+        vote_type = data.get('vote_type')
+        
+        if vote_type not in ['helpful', 'unhelpful']:
+            return JsonResponse({'status': 'error', 'message': 'Invalid vote type'}, status=400)
+        
+        # Get or create session key for anonymous users
+        if not request.session.session_key:
+            request.session.create()
+        session_key = request.session.session_key
+        
+        # Check if user has already voted
+        user = request.user if request.user.is_authenticated else None
+        
+        existing_vote = None
+        if user:
+            existing_vote = FeedbackVote.objects.filter(feedback=feedback, user=user).first()
+        else:
+            existing_vote = FeedbackVote.objects.filter(feedback=feedback, session_key=session_key).first()
+        
+        if existing_vote:
+            # Update vote if changed
+            if existing_vote.vote_type != vote_type:
+                # Decrement old vote count
+                if existing_vote.vote_type == 'helpful':
+                    feedback.helpful_count = max(0, feedback.helpful_count - 1)
+                else:
+                    feedback.unhelpful_count = max(0, feedback.unhelpful_count - 1)
+                
+                # Update vote type
+                existing_vote.vote_type = vote_type
+                existing_vote.save()
+                
+                # Increment new vote count
+                if vote_type == 'helpful':
+                    feedback.helpful_count += 1
+                else:
+                    feedback.unhelpful_count += 1
+                
+                feedback.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Vote updated',
+                    'helpful_count': feedback.helpful_count,
+                    'unhelpful_count': feedback.unhelpful_count
+                })
+            else:
+                return JsonResponse({
+                    'status': 'info',
+                    'message': 'You have already voted',
+                    'helpful_count': feedback.helpful_count,
+                    'unhelpful_count': feedback.unhelpful_count
+                })
+        else:
+            # Create new vote
+            FeedbackVote.objects.create(
+                feedback=feedback,
+                user=user,
+                session_key=session_key if not user else '',
+                vote_type=vote_type
+            )
+            
+            # Increment vote count
+            if vote_type == 'helpful':
+                feedback.helpful_count += 1
+            else:
+                feedback.unhelpful_count += 1
+            
+            feedback.save()
+            
+            log_activity(request, 'vote', f'Voted {vote_type} on feedback {feedback.id}')
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Voted as {vote_type}',
+                'helpful_count': feedback.helpful_count,
+                'unhelpful_count': feedback.unhelpful_count
+            })
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Vote feedback error: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': 'Server error'}, status=500)

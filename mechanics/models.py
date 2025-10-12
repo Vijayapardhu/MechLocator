@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 
 
 class Mechanic(models.Model):
@@ -153,6 +157,10 @@ class MechanicImage(models.Model):
             ('mechanic', 'Mechanic Photo'),
             ('shop', 'Shop Photo'),
             ('work', 'Work Sample'),
+            ('before', 'Before Work'),
+            ('after', 'After Work'),
+            ('equipment', 'Equipment Photo'),
+            ('team', 'Team Photo'),
         ],
         default='shop',
         help_text="Type of image"
@@ -204,6 +212,23 @@ class CustomerFeedback(models.Model):
         default=False,
         help_text="Whether the feedback is approved for display"
     )
+    mechanic_reply = models.TextField(
+        blank=True,
+        help_text="Mechanic's response to the feedback"
+    )
+    mechanic_reply_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the mechanic replied"
+    )
+    helpful_count = models.IntegerField(
+        default=0,
+        help_text="Number of users who found this review helpful"
+    )
+    unhelpful_count = models.IntegerField(
+        default=0,
+        help_text="Number of users who found this review unhelpful"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -242,3 +267,76 @@ class FeedbackImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.feedback.customer_name}'s feedback"
+    
+    def save(self, *args, **kwargs):
+        """Override save to optimize/compress image."""
+        if self.image:
+            img = Image.open(self.image)
+            
+            # Convert to RGB if necessary
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # Resize if image is too large (max 1920x1920)
+            max_size = (1920, 1920)
+            if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            # Compress and save
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=85, optimize=True)
+            output.seek(0)
+            
+            # Replace the image file with compressed version
+            self.image = InMemoryUploadedFile(
+                output, 'ImageField', 
+                f"{self.image.name.split('.')[0]}.jpg",
+                'image/jpeg',
+                sys.getsizeof(output), None
+            )
+        
+        super().save(*args, **kwargs)
+
+
+class FeedbackVote(models.Model):
+    """Model for tracking user votes on feedback."""
+    VOTE_CHOICES = [
+        ('helpful', 'Helpful'),
+        ('unhelpful', 'Unhelpful'),
+    ]
+    
+    feedback = models.ForeignKey(
+        CustomerFeedback,
+        on_delete=models.CASCADE,
+        related_name='votes',
+        help_text="Feedback that was voted on"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="User who voted (null for anonymous)"
+    )
+    session_key = models.CharField(
+        max_length=40,
+        blank=True,
+        help_text="Session key for anonymous users"
+    )
+    vote_type = models.CharField(
+        max_length=10,
+        choices=VOTE_CHOICES,
+        help_text="Type of vote"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Feedback Vote"
+        verbose_name_plural = "Feedback Votes"
+        # Ensure one vote per user/session per feedback
+        unique_together = [['feedback', 'user'], ['feedback', 'session_key']]
+
+    def __str__(self):
+        user_info = self.user.username if self.user else f"Session {self.session_key[:8]}"
+        return f"{user_info} - {self.vote_type} on {self.feedback}"

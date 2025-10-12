@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.conf import settings
 import json
 
-from .models import Mechanic, UserProfile, ActivityLog, SearchQuery, MechanicImage, CustomerFeedback, FeedbackImage
+from .models import Mechanic, UserProfile, ActivityLog, SearchQuery, MechanicImage, CustomerFeedback, FeedbackImage, FeedbackVote
 
 # Custom Admin Site (keeping for reference)
 class MechLocatorAdminSite(admin.AdminSite):
@@ -515,10 +515,10 @@ class FeedbackImageInline(admin.TabularInline):
 # CustomerFeedback Admin
 @admin.register(CustomerFeedback)
 class CustomerFeedbackAdmin(admin.ModelAdmin):
-    list_display = ['customer_name', 'mechanic', 'rating', 'is_approved', 'created_at']
+    list_display = ['customer_name', 'mechanic', 'rating', 'is_approved', 'helpful_count', 'unhelpful_count', 'created_at']
     list_filter = ['is_approved', 'rating', 'created_at']
-    search_fields = ['customer_name', 'mechanic__name', 'comment']
-    readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['customer_name', 'mechanic__name', 'comment', 'mechanic_reply']
+    readonly_fields = ['created_at', 'updated_at', 'helpful_count', 'unhelpful_count']
     list_editable = ['is_approved']
     list_per_page = 50
     inlines = [FeedbackImageInline]
@@ -526,6 +526,13 @@ class CustomerFeedbackAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Feedback Information', {
             'fields': ('mechanic', 'user', 'customer_name', 'rating', 'comment')
+        }),
+        ('Mechanic Reply', {
+            'fields': ('mechanic_reply', 'mechanic_reply_date'),
+        }),
+        ('Voting Stats', {
+            'fields': ('helpful_count', 'unhelpful_count'),
+            'classes': ('collapse',)
         }),
         ('Moderation', {
             'fields': ('is_approved',)
@@ -539,6 +546,13 @@ class CustomerFeedbackAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('mechanic', 'user')
+    
+    def save_model(self, request, obj, form, change):
+        """Auto-set reply date when mechanic_reply is added."""
+        if change and 'mechanic_reply' in form.changed_data and obj.mechanic_reply:
+            if not obj.mechanic_reply_date:
+                obj.mechanic_reply_date = timezone.now()
+        super().save_model(request, obj, form, change)
 
 # FeedbackImage Admin
 @admin.register(FeedbackImage)
@@ -548,6 +562,19 @@ class FeedbackImageAdmin(admin.ModelAdmin):
     search_fields = ['feedback__customer_name', 'caption']
     readonly_fields = ['uploaded_at']
     list_per_page = 50
+
+# FeedbackVote Admin
+@admin.register(FeedbackVote)
+class FeedbackVoteAdmin(admin.ModelAdmin):
+    list_display = ['feedback', 'user', 'vote_type', 'created_at']
+    list_filter = ['vote_type', 'created_at']
+    search_fields = ['feedback__customer_name', 'user__username']
+    readonly_fields = ['created_at']
+    list_per_page = 50
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('feedback', 'user')
 
 # Note: Mechanic, ActivityLog, and SearchQuery are already registered with @admin.register decorators
 # User is registered in urls.py to avoid conflicts

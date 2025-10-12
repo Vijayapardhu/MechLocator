@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from .models import CustomerFeedback, FeedbackImage
 import re
 
 
@@ -95,3 +96,29 @@ class UserRegistrationForm(UserCreationForm):
                 user.profile.save()
         
         return user
+
+
+class CustomerFeedbackForm(forms.ModelForm):
+    """Form for submitting customer feedback with images."""
+    
+    class Meta:
+        model = CustomerFeedback
+        fields = ['customer_name', 'rating', 'comment']
+        widgets = {
+            'customer_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Your name'
+            }),
+            'rating': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '5',
+                'step': '0.5',
+                'placeholder': 'Rating (0-5)'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Share your experience...'
+            }),
+        }

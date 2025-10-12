@@ -269,10 +269,80 @@
                         {% endfor %}
                     </div>
                     {% endif %}
+                    
+                    <!-- Mechanic Reply -->
+                    {% if feedback.mechanic_reply %}
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="fas fa-reply me-2"></i>Mechanic's Response</h6>
+                        <p class="mb-1">{{ feedback.mechanic_reply }}</p>
+                        <small class="text-muted">Replied on {{ feedback.mechanic_reply_date|date:"M d, Y" }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Voting -->
+                    <div class="mt-3">
+                        <small class="text-muted">Was this review helpful?</small>
+                        <div class="btn-group ms-2" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-success vote-btn" 
+                                    onclick="voteFeedback({{ feedback.id }}, 'helpful')"
+                                    data-feedback-id="{{ feedback.id }}"
+                                    data-vote-type="helpful">
+                                <i class="fas fa-thumbs-up me-1"></i>
+                                <span class="helpful-count-{{ feedback.id }}">{{ feedback.helpful_count }}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger vote-btn" 
+                                    onclick="voteFeedback({{ feedback.id }}, 'unhelpful')"
+                                    data-feedback-id="{{ feedback.id }}"
+                                    data-vote-type="unhelpful">
+                                <i class="fas fa-thumbs-down me-1"></i>
+                                <span class="unhelpful-count-{{ feedback.id }}">{{ feedback.unhelpful_count }}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% endif %}
+            
+            <!-- Submit Feedback Form -->
+            <div class="info-card">
+                <h4 class="mb-4">
+                    <i class="fas fa-pen me-2 text-primary"></i>Submit Your Review
+                </h4>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ feedback_form.customer_name.label_tag }}
+                        {{ feedback_form.customer_name }}
+                        {% if feedback_form.customer_name.errors %}
+                            <div class="text-danger">{{ feedback_form.customer_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ feedback_form.rating.label_tag }}
+                        {{ feedback_form.rating }}
+                        {% if feedback_form.rating.errors %}
+                            <div class="text-danger">{{ feedback_form.rating.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ feedback_form.comment.label_tag }}
+                        {{ feedback_form.comment }}
+                        {% if feedback_form.comment.errors %}
+                            <div class="text-danger">{{ feedback_form.comment.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_images" class="form-label">Upload Images (Optional)</label>
+                        <input type="file" name="images" id="id_images" class="form-control" 
+                               accept="image/*" multiple>
+                        <small class="form-text text-muted">You can upload up to 5 images (max 5MB each)</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Review
+                    </button>
+                </form>
+            </div>
 
             <!-- Map -->
             <div class="info-card">
@@ -494,6 +564,36 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// Vote on feedback
+function voteFeedback(feedbackId, voteType) {
+    fetch(`/api/feedback/${feedbackId}/vote/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ vote_type: voteType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success' || data.status === 'info') {
+            // Update vote counts
+            document.querySelector(`.helpful-count-${feedbackId}`).textContent = data.helpful_count;
+            document.querySelector(`.unhelpful-count-${feedbackId}`).textContent = data.unhelpful_count;
+            
+            if (data.status === 'success') {
+                // Show success message
+                const btn = event.target.closest('.vote-btn');
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 2000);
+            }
+        } else {
+            console.error('Vote failed:', data.message);
+        }
+    })
+    .catch(error => console.error('Error voting:', error));
 }
 
 // Initialize map when Google Maps API loads

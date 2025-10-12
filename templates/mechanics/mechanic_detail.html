@@ -77,6 +77,20 @@
         padding: 8px 16px;
         border-radius: 20px;
     }
+    
+    .gallery-image {
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-image:hover {
+        transform: scale(1.05);
+    }
+    
+    .feedback-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+    }
 </style>
 {% endblock %}
 
@@ -187,6 +201,78 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Image Gallery -->
+            {% if mechanic_images %}
+            <div class="info-card">
+                <h4 class="mb-4">
+                    <i class="fas fa-images me-2 text-primary"></i>Gallery
+                </h4>
+                <div class="row g-3">
+                    {% for img in mechanic_images %}
+                    <div class="col-md-4 col-sm-6">
+                        <div class="position-relative">
+                            <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Mechanic image' }}" 
+                                 class="img-fluid rounded shadow-sm" style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;"
+                                 onclick="showImageModal('{{ img.image.url }}', '{{ img.caption|escapejs }}')">
+                            {% if img.is_primary %}
+                            <span class="badge bg-primary position-absolute top-0 end-0 m-2">Featured</span>
+                            {% endif %}
+                            <span class="badge bg-dark position-absolute bottom-0 start-0 m-2">{{ img.get_image_type_display }}</span>
+                            {% if img.caption %}
+                            <div class="mt-1">
+                                <small class="text-muted">{{ img.caption }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Customer Feedback -->
+            {% if feedbacks %}
+            <div class="info-card">
+                <h4 class="mb-4">
+                    <i class="fas fa-comments me-2 text-primary"></i>Customer Reviews ({{ feedbacks.count }})
+                </h4>
+                {% for feedback in feedbacks %}
+                <div class="mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">{{ feedback.customer_name }}</h6>
+                            <div class="rating-stars" style="font-size: 1em;">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= feedback.rating %}
+                                        ★
+                                    {% else %}
+                                        ☆
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-2 text-muted">{{ feedback.rating }}/5</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ feedback.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <p class="mb-2">{{ feedback.comment }}</p>
+                    
+                    <!-- Feedback Images -->
+                    {% if feedback.images.all %}
+                    <div class="row g-2 mt-2">
+                        {% for img in feedback.images.all %}
+                        <div class="col-md-3 col-sm-4 col-6">
+                            <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Feedback image' }}" 
+                                 class="img-fluid rounded shadow-sm" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;"
+                                 onclick="showImageModal('{{ img.image.url }}', '{{ img.caption|escapejs }}')">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <!-- Map -->
             <div class="info-card">
@@ -412,7 +498,29 @@ function getCookie(name) {
 
 // Initialize map when Google Maps API loads
 window.initDetailMap = initDetailMap;
+
+// Image modal functionality
+function showImageModal(imageUrl, caption) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('imageCaption');
+    
+    modal.style.display = 'block';
+    modalImg.src = imageUrl;
+    modalCaption.textContent = caption || '';
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+}
 </script>
+
+<!-- Image Modal -->
+<div id="imageModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);" onclick="closeImageModal()">
+    <span class="close" style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer;" onclick="closeImageModal()">&times;</span>
+    <img id="modalImage" style="margin: auto; display: block; max-width: 90%; max-height: 90%; margin-top: 50px;">
+    <div id="imageCaption" style="margin: auto; display: block; width: 80%; max-width: 700px; text-align: center; color: #ccc; padding: 10px 0; font-size: 18px;"></div>
+</div>
 
 <!-- Google Maps API -->
 <script async defer

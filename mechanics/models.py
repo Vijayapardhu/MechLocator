@@ -128,3 +128,117 @@ class SearchQuery(models.Model):
 
     def __str__(self):
         return f"{self.query_type} search at {self.timestamp}"
+
+
+class MechanicImage(models.Model):
+    """Model for storing multiple images for mechanic/shop."""
+    mechanic = models.ForeignKey(
+        Mechanic,
+        on_delete=models.CASCADE,
+        related_name='images',
+        help_text="Mechanic shop this image belongs to"
+    )
+    image = models.ImageField(
+        upload_to='mechanic_gallery/',
+        help_text="Mechanic or shop photo"
+    )
+    caption = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Optional caption for the image"
+    )
+    image_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('mechanic', 'Mechanic Photo'),
+            ('shop', 'Shop Photo'),
+            ('work', 'Work Sample'),
+        ],
+        default='shop',
+        help_text="Type of image"
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Set as primary/featured image"
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_primary', '-uploaded_at']
+        verbose_name = "Mechanic Image"
+        verbose_name_plural = "Mechanic Images"
+
+    def __str__(self):
+        return f"{self.mechanic.name} - {self.get_image_type_display()}"
+
+
+class CustomerFeedback(models.Model):
+    """Model for storing customer feedback and reviews."""
+    mechanic = models.ForeignKey(
+        Mechanic,
+        on_delete=models.CASCADE,
+        related_name='feedbacks',
+        help_text="Mechanic shop this feedback is for"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="User who submitted the feedback"
+    )
+    customer_name = models.CharField(
+        max_length=100,
+        help_text="Customer name"
+    )
+    rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        validators=[MinValueValidator(0.0), MaxValueValidator(5.0)],
+        help_text="Rating from 0.0 to 5.0"
+    )
+    comment = models.TextField(
+        help_text="Customer's review/comment"
+    )
+    is_approved = models.BooleanField(
+        default=False,
+        help_text="Whether the feedback is approved for display"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Customer Feedback"
+        verbose_name_plural = "Customer Feedbacks"
+
+    def __str__(self):
+        return f"{self.customer_name} - {self.mechanic.name} ({self.rating}★)"
+
+
+class FeedbackImage(models.Model):
+    """Model for storing images attached to customer feedback."""
+    feedback = models.ForeignKey(
+        CustomerFeedback,
+        on_delete=models.CASCADE,
+        related_name='images',
+        help_text="Feedback this image belongs to"
+    )
+    image = models.ImageField(
+        upload_to='feedback_images/',
+        help_text="Image from customer feedback"
+    )
+    caption = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Optional caption for the image"
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Feedback Image"
+        verbose_name_plural = "Feedback Images"
+
+    def __str__(self):
+        return f"Image for {self.feedback.customer_name}'s feedback"

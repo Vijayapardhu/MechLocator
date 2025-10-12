@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import login
 from geopy.distance import geodesic
-from .models import Mechanic, ActivityLog
+from .models import Mechanic, ActivityLog, MechanicImage, CustomerFeedback
 from .forms import UserRegistrationForm
 import json
 import logging
@@ -130,10 +130,18 @@ def mechanic_detail(request, mechanic_id):
         except (ValueError, TypeError):
             mechanic.distance_from_user = None
     
+    # Get mechanic images
+    mechanic_images = mechanic.images.all()
+    
+    # Get approved customer feedback
+    feedbacks = mechanic.feedbacks.filter(is_approved=True).order_by('-created_at')
+    
     log_activity(request, 'view', f'Mechanic detail viewed: {mechanic.name}')
     
     context = {
         'mechanic': mechanic,
+        'mechanic_images': mechanic_images,
+        'feedbacks': feedbacks,
         'user_lat': user_lat,
         'user_lng': user_lng,
     }

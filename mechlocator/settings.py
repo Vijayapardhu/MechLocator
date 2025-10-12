@@ -165,6 +165,11 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='MechLocator <noreply@
 OTP_EXPIRY_MINUTES = 10
 OTP_LENGTH = 6
 
+# Supabase Configuration
+SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_KEY = config('SUPABASE_KEY', default='')
+SUPABASE_BUCKET = config('SUPABASE_BUCKET', default='mechlocator-images')
+
 # Production Security Settings
 if not DEBUG:
     # HTTPS Settings

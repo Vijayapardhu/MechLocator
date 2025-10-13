@@ -121,9 +121,31 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = config('STATIC_ROOT', default='staticfiles')
 
-# Media files
-MEDIA_URL = '/media/'
+# Media files (user uploads) - Using Supabase Storage
+MEDIA_URL = 'https://nberhjmbwsrsgzxkmqkw.supabase.co/storage/v1/object/public/media/'
 MEDIA_ROOT = config('MEDIA_ROOT', default='media')
+
+# Supabase Storage Configuration
+SUPABASE_URL = 'https://nberhjmbwsrsgzxkmqkw.supabase.co'
+SUPABASE_ANON_KEY = config('SUPABASE_ANON_KEY', default='')
+SUPABASE_SERVICE_ROLE_KEY = config('SUPABASE_SERVICE_ROLE_KEY', default='')
+
+# AWS S3 Compatible Storage for Supabase
+AWS_ACCESS_KEY_ID = config('SUPABASE_SERVICE_ROLE_KEY', default='')
+AWS_SECRET_ACCESS_KEY = config('SUPABASE_SERVICE_ROLE_KEY', default='')
+AWS_STORAGE_BUCKET_NAME = 'media'
+AWS_S3_ENDPOINT_URL = 'https://nberhjmbwsrsgzxkmqkw.supabase.co/storage/v1'
+AWS_S3_REGION_NAME = 'us-east-1'
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_CUSTOM_DOMAIN = 'nberhjmbwsrsgzxkmqkw.supabase.co'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+# Use Supabase for media files in production
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'mechlocator.storage.SupabaseMediaStorage'
+    STATICFILES_STORAGE = 'mechlocator.storage.SupabaseStaticStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

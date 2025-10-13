@@ -261,15 +261,14 @@ def contact(request):
     return render(request, 'mechanics/contact.html')
 
 
-def log_activity(request, action, description):
+def log_activity(request, action, details):
     """Log user activity."""
     try:
         ActivityLog.objects.create(
             user=request.user if request.user.is_authenticated else None,
             action=action,
-            description=description,
+            details=details,
             ip_address=get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', ''),
         )
     except Exception as e:
         logger.error(f"Failed to log activity: {str(e)}")

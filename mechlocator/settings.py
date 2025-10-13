@@ -143,9 +143,10 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 
 # Use Supabase for media files in production
-if not DEBUG:
-    DEFAULT_FILE_STORAGE = 'mechlocator.storage.SupabaseMediaStorage'
-    STATICFILES_STORAGE = 'mechlocator.storage.SupabaseStaticStorage'
+# Temporarily disabled until proper credentials are configured
+# if not DEBUG:
+#     DEFAULT_FILE_STORAGE = 'mechlocator.storage.SupabaseMediaStorage'
+#     STATICFILES_STORAGE = 'mechlocator.storage.SupabaseStaticStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

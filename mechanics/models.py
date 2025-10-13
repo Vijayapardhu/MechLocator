@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class Mechanic(models.Model):
@@ -33,7 +34,13 @@ class Mechanic(models.Model):
         upload_to='mechanic_images/',
         blank=True,
         null=True,
-        help_text="Shop image"
+        help_text="Shop profile image"
+    )
+    profile_image = models.ImageField(
+        upload_to='mechanic_profiles/',
+        blank=True,
+        null=True,
+        help_text="Mechanic profile photo"
     )
     is_active = models.BooleanField(default=True, help_text="Whether the shop is currently active")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -128,3 +135,184 @@ class SearchQuery(models.Model):
 
     def __str__(self):
         return f"{self.query_type} search at {self.timestamp}"
+
+
+class MechanicGallery(models.Model):
+    """Model for storing mechanic shop gallery photos."""
+    mechanic = models.ForeignKey(
+        Mechanic, 
+        on_delete=models.CASCADE, 
+        related_name='gallery_photos',
+        help_text="Associated mechanic shop"
+    )
+    image = models.ImageField(
+        upload_to='mechanic_gallery/',
+        help_text="Gallery photo"
+    )
+    caption = models.CharField(
+        max_length=200, 
+        blank=True, 
+        help_text="Photo caption (optional)"
+    )
+    is_featured = models.BooleanField(
+        default=False, 
+        help_text="Whether this photo should be featured in the gallery"
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_featured', '-uploaded_at']
+        verbose_name = "Gallery Photo"
+        verbose_name_plural = "Gallery Photos"
+
+    def __str__(self):
+        return f"{self.mechanic.name} - {self.caption or 'Gallery Photo'}"
+
+    def clean(self):
+        """Validate that only one photo can be featured per mechanic."""
+        if self.is_featured:
+            existing_featured = MechanicGallery.objects.filter(
+                mechanic=self.mechanic, 
+                is_featured=True
+            ).exclude(id=self.id)
+            if existing_featured.exists():
+                raise ValidationError("Only one photo can be featured per mechanic shop.")
+
+
+class Review(models.Model):
+    """Model for storing customer reviews of mechanic shops."""
+    RATING_CHOICES = [
+        (1, '1 - Poor'),
+        (2, '2 - Fair'),
+        (3, '3 - Good'),
+        (4, '4 - Very Good'),
+        (5, '5 - Excellent'),
+    ]
+
+    mechanic = models.ForeignKey(
+        Mechanic, 
+        on_delete=models.CASCADE, 
+        related_name='reviews',
+        help_text="Mechanic shop being reviewed"
+    )
+    customer = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='reviews',
+        help_text="Customer who wrote the review"
+    )
+    rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Rating from 1 to 5 stars"
+    )
+    title = models.CharField(
+        max_length=100,
+        help_text="Review title"
+    )
+    comment = models.TextField(
+        help_text="Detailed review comment"
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether this review is verified"
+    )
+    is_public = models.BooleanField(
+        default=True,
+        help_text="Whether this review is visible to public"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['mechanic', 'customer']  # One review per customer per mechanic
+        verbose_name = "Review"
+        verbose_name_plural = "Reviews"
+
+    def __str__(self):
+        return f"{self.customer.username} - {self.mechanic.name} ({self.rating}/5)"
+
+    def clean(self):
+        """Validate review data."""
+        if self.rating < 1 or self.rating > 5:
+            raise ValidationError("Rating must be between 1 and 5.")
+        
+        if not self.title.strip():
+            raise ValidationError("Review title cannot be empty.")
+        
+        if not self.comment.strip():
+            raise ValidationError("Review comment cannot be empty.")
+
+    def save(self, *args, **kwargs):
+        """Override save to update mechanic rating."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+        self.update_mechanic_rating()
+
+    def update_mechanic_rating(self):
+        """Update the mechanic's average rating based on all reviews."""
+        reviews = Review.objects.filter(
+            mechanic=self.mechanic, 
+            is_public=True
+        )
+        if reviews.exists():
+            avg_rating = reviews.aggregate(
+                avg_rating=models.Avg('rating')
+            )['avg_rating']
+            self.mechanic.rating = round(avg_rating, 2)
+            self.mechanic.save(update_fields=['rating'])
+
+
+class CustomerProfile(models.Model):
+    """Extended customer profile for review system."""
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='customer_profile',
+        help_text="Associated user account"
+    )
+    phone = models.CharField(
+        max_length=20, 
+        blank=True, 
+        help_text="Customer's phone number"
+    )
+    address = models.TextField(
+        blank=True, 
+        help_text="Customer's address"
+    )
+    date_of_birth = models.DateField(
+        null=True, 
+        blank=True, 
+        help_text="Customer's date of birth"
+    )
+    profile_image = models.ImageField(
+        upload_to='customer_profiles/',
+        blank=True, 
+        null=True, 
+        help_text="Customer's profile photo"
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether customer is verified"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Customer Profile"
+        verbose_name_plural = "Customer Profiles"
+
+    def __str__(self):
+        return f"{self.user.username}'s Customer Profile"
+
+    @property
+    def full_name(self):
+        """Return customer's full name."""
+        return f"{self.user.first_name} {self.user.last_name}".strip() or self.user.username
+
+    @property
+    def review_count(self):
+        """Return number of reviews written by this customer."""
+        return self.user.reviews.filter(is_public=True).count()

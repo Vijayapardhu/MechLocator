@@ -1,246 +1,201 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from mechanics.models import Mechanic, UserProfile
-from decimal import Decimal
+from mechanics.models import Mechanic, MechanicGallery, Review, CustomerProfile
+from django.core.files.base import ContentFile
 import random
+from decimal import Decimal
 
 
 class Command(BaseCommand):
-    help = 'Populate database with sample mechanic shops and users'
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--mechanics',
-            type=int,
-            default=20,
-            help='Number of mechanic shops to create (default: 20)'
-        )
-        parser.add_argument(
-            '--users',
-            type=int,
-            default=5,
-            help='Number of sample users to create (default: 5)'
-        )
+    help = 'Populate database with sample data for testing'
 
     def handle(self, *args, **options):
-        num_mechanics = options['mechanics']
-        num_users = options['users']
-
-        self.stdout.write(
-            self.style.SUCCESS(f'Creating {num_mechanics} mechanic shops and {num_users} users...')
-        )
-
+        self.stdout.write('Creating sample data...')
+        
         # Create sample users
-        self.create_sample_users(num_users)
-
-        # Create sample mechanics
-        self.create_sample_mechanics(num_mechanics)
-
-        self.stdout.write(
-            self.style.SUCCESS('Sample data creation completed successfully!')
-        )
-
-    def create_sample_users(self, num_users):
-        """Create sample user accounts with profiles."""
-        sample_users = [
-            {'username': 'john_doe', 'first_name': 'John', 'last_name': 'Doe', 'email': 'john@example.com'},
-            {'username': 'jane_smith', 'first_name': 'Jane', 'last_name': 'Smith', 'email': 'jane@example.com'},
-            {'username': 'mike_wilson', 'first_name': 'Mike', 'last_name': 'Wilson', 'email': 'mike@example.com'},
-            {'username': 'sarah_jones', 'first_name': 'Sarah', 'last_name': 'Jones', 'email': 'sarah@example.com'},
-            {'username': 'david_brown', 'first_name': 'David', 'last_name': 'Brown', 'email': 'david@example.com'},
+        users_data = [
+            {
+                'username': 'john_doe',
+                'email': 'john@example.com',
+                'first_name': 'John',
+                'last_name': 'Doe',
+                'password': 'password123'
+            },
+            {
+                'username': 'jane_smith',
+                'email': 'jane@example.com',
+                'first_name': 'Jane',
+                'last_name': 'Smith',
+                'password': 'password123'
+            },
+            {
+                'username': 'mike_wilson',
+                'email': 'mike@example.com',
+                'first_name': 'Mike',
+                'last_name': 'Wilson',
+                'password': 'password123'
+            },
+            {
+                'username': 'sarah_jones',
+                'email': 'sarah@example.com',
+                'first_name': 'Sarah',
+                'last_name': 'Jones',
+                'password': 'password123'
+            },
+            {
+                'username': 'david_brown',
+                'email': 'david@example.com',
+                'first_name': 'David',
+                'last_name': 'Brown',
+                'password': 'password123'
+            }
         ]
-
-        for i, user_data in enumerate(sample_users[:num_users]):
-            if not User.objects.filter(username=user_data['username']).exists():
-                user = User.objects.create_user(
-                    username=user_data['username'],
-                    email=user_data['email'],
-                    password='password123',
-                    first_name=user_data['first_name'],
-                    last_name=user_data['last_name']
-                )
-                
-                # Create user profile
-                UserProfile.objects.create(
+        
+        created_users = []
+        for user_data in users_data:
+            user, created = User.objects.get_or_create(
+                username=user_data['username'],
+                defaults={
+                    'email': user_data['email'],
+                    'first_name': user_data['first_name'],
+                    'last_name': user_data['last_name']
+                }
+            )
+            if created:
+                user.set_password(user_data['password'])
+                user.save()
+                # Create customer profile
+                CustomerProfile.objects.create(
                     user=user,
-                    phone=f'+1-555-{1000 + i:04d}',
-                    address=f'{100 + i} Main Street, City, State {10000 + i}'
+                    phone=f'+1-555-{random.randint(100, 999)}-{random.randint(1000, 9999)}',
+                    address=f'{random.randint(100, 9999)} Main St, City, State {random.randint(10000, 99999)}',
+                    is_verified=random.choice([True, False])
                 )
-                
+                created_users.append(user)
                 self.stdout.write(f'Created user: {user.username}')
-
-    def create_sample_mechanics(self, num_mechanics):
-        """Create sample mechanic shops with realistic data."""
-        mechanic_data = [
+        
+        # Create sample mechanics
+        mechanics_data = [
             {
-                'name': 'ABC Auto Repair',
-                'address': '123 Main Street, Downtown, City, State 12345',
+                'name': 'AutoCare Plus',
+                'address': '123 Main Street, New York, NY 10001',
+                'latitude': Decimal('40.7128'),
+                'longitude': Decimal('-74.0060'),
                 'contact': '+1-555-0101',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.8
-            },
-            {
-                'name': 'City Auto Service',
-                'address': '456 Oak Avenue, Midtown, City, State 12345',
-                'contact': '+1-555-0102',
-                'working_hours': 'Monday-Friday: 7:30 AM - 7:00 PM\nSaturday: 8:00 AM - 5:00 PM\nSunday: 10:00 AM - 2:00 PM',
-                'rating': 4.6
-            },
-            {
-                'name': 'Express Car Care',
-                'address': '789 Pine Street, Uptown, City, State 12345',
-                'contact': '+1-555-0103',
-                'working_hours': 'Monday-Saturday: 8:00 AM - 6:00 PM\nSunday: Closed',
-                'rating': 4.4
-            },
-            {
-                'name': 'Pro Auto Solutions',
-                'address': '321 Elm Street, Westside, City, State 12345',
-                'contact': '+1-555-0104',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 3:00 PM\nSunday: Closed',
-                'rating': 4.9
+                'rating': Decimal('4.5'),
+                'working_hours': 'Mon-Fri: 8:00 AM - 6:00 PM\nSat: 9:00 AM - 4:00 PM\nSun: Closed',
+                'is_active': True
             },
             {
                 'name': 'Quick Fix Garage',
-                'address': '654 Maple Drive, Eastside, City, State 12345',
-                'contact': '+1-555-0105',
-                'working_hours': 'Monday-Friday: 7:00 AM - 8:00 PM\nSaturday: 8:00 AM - 6:00 PM\nSunday: 9:00 AM - 4:00 PM',
-                'rating': 4.3
+                'address': '456 Oak Avenue, Los Angeles, CA 90210',
+                'latitude': Decimal('34.0522'),
+                'longitude': Decimal('-118.2437'),
+                'contact': '+1-555-0202',
+                'rating': Decimal('4.2'),
+                'working_hours': 'Mon-Sat: 7:00 AM - 7:00 PM\nSun: 10:00 AM - 4:00 PM',
+                'is_active': True
             },
             {
-                'name': 'Reliable Auto Repair',
-                'address': '987 Cedar Lane, Northside, City, State 12345',
-                'contact': '+1-555-0106',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.7
+                'name': 'Pro Mechanic Services',
+                'address': '789 Pine Road, Chicago, IL 60601',
+                'latitude': Decimal('41.8781'),
+                'longitude': Decimal('-87.6298'),
+                'contact': '+1-555-0303',
+                'rating': Decimal('4.8'),
+                'working_hours': 'Mon-Fri: 6:00 AM - 8:00 PM\nSat: 7:00 AM - 6:00 PM\nSun: 8:00 AM - 4:00 PM',
+                'is_active': True
             },
             {
-                'name': 'Speedy Auto Service',
-                'address': '147 Birch Road, Southside, City, State 12345',
-                'contact': '+1-555-0107',
-                'working_hours': 'Monday-Saturday: 7:00 AM - 7:00 PM\nSunday: 10:00 AM - 3:00 PM',
-                'rating': 4.5
+                'name': 'Family Auto Repair',
+                'address': '321 Elm Street, Houston, TX 77001',
+                'latitude': Decimal('29.7604'),
+                'longitude': Decimal('-95.3698'),
+                'contact': '+1-555-0404',
+                'rating': Decimal('4.0'),
+                'working_hours': 'Mon-Fri: 8:00 AM - 5:30 PM\nSat: 9:00 AM - 3:00 PM\nSun: Closed',
+                'is_active': True
             },
             {
-                'name': 'Trusted Car Care',
-                'address': '258 Willow Way, Central, City, State 12345',
-                'contact': '+1-555-0108',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.8
-            },
-            {
-                'name': 'VIP Auto Repair',
-                'address': '369 Spruce Street, Heights, City, State 12345',
-                'contact': '+1-555-0109',
-                'working_hours': 'Monday-Friday: 8:00 AM - 7:00 PM\nSaturday: 9:00 AM - 5:00 PM\nSunday: Closed',
-                'rating': 4.6
-            },
-            {
-                'name': '24/7 Auto Service',
-                'address': '741 Poplar Avenue, Valley, City, State 12345',
-                'contact': '+1-555-0110',
-                'working_hours': '24/7 Emergency Service Available',
-                'rating': 4.2
-            },
-            {
-                'name': 'Classic Car Specialists',
-                'address': '852 Ash Street, Historic, City, State 12345',
-                'contact': '+1-555-0111',
-                'working_hours': 'Monday-Friday: 9:00 AM - 5:00 PM\nSaturday: 10:00 AM - 3:00 PM\nSunday: Closed',
-                'rating': 4.9
-            },
-            {
-                'name': 'Hybrid Auto Experts',
-                'address': '963 Chestnut Drive, Modern, City, State 12345',
-                'contact': '+1-555-0112',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.7
-            },
-            {
-                'name': 'Luxury Auto Service',
-                'address': '159 Magnolia Lane, Upscale, City, State 12345',
-                'contact': '+1-555-0113',
-                'working_hours': 'Monday-Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.8
-            },
-            {
-                'name': 'Budget Auto Repair',
-                'address': '357 Sycamore Road, Budget, City, State 12345',
-                'contact': '+1-555-0114',
-                'working_hours': 'Monday-Friday: 7:00 AM - 6:00 PM\nSaturday: 8:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.1
-            },
-            {
-                'name': 'Family Auto Care',
-                'address': '486 Acacia Street, Family, City, State 12345',
-                'contact': '+1-555-0115',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.6
-            },
-            {
-                'name': 'Mobile Auto Service',
-                'address': '597 Juniper Way, Mobile, City, State 12345',
-                'contact': '+1-555-0116',
-                'working_hours': 'Mobile Service - Call for Appointment',
-                'rating': 4.4
-            },
-            {
-                'name': 'Truck & SUV Specialists',
-                'address': '618 Cypress Drive, Industrial, City, State 12345',
-                'contact': '+1-555-0117',
-                'working_hours': 'Monday-Friday: 7:00 AM - 7:00 PM\nSaturday: 8:00 AM - 5:00 PM\nSunday: Closed',
-                'rating': 4.5
-            },
-            {
-                'name': 'European Auto Service',
-                'address': '739 Redwood Lane, European, City, State 12345',
-                'contact': '+1-555-0118',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.8
-            },
-            {
-                'name': 'Asian Auto Repair',
-                'address': '864 Sequoia Street, Asian, City, State 12345',
-                'contact': '+1-555-0119',
-                'working_hours': 'Monday-Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.6
-            },
-            {
-                'name': 'Performance Auto Tuning',
-                'address': '975 Fir Avenue, Performance, City, State 12345',
-                'contact': '+1-555-0120',
-                'working_hours': 'Monday-Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 4:00 PM\nSunday: Closed',
-                'rating': 4.7
+                'name': 'Express Auto Solutions',
+                'address': '654 Maple Drive, Phoenix, AZ 85001',
+                'latitude': Decimal('33.4484'),
+                'longitude': Decimal('-112.0740'),
+                'contact': '+1-555-0505',
+                'rating': Decimal('4.6'),
+                'working_hours': 'Mon-Fri: 7:30 AM - 6:00 PM\nSat: 8:00 AM - 5:00 PM\nSun: Closed',
+                'is_active': True
             }
         ]
-
-        # City center coordinates (example: New York City)
-        base_lat = 40.7128
-        base_lng = -74.0060
-
-        for i, data in enumerate(mechanic_data[:num_mechanics]):
-            if not Mechanic.objects.filter(name=data['name']).exists():
-                # Generate random coordinates within city area (±0.1 degrees)
-                lat = base_lat + (random.uniform(-0.1, 0.1))
-                lng = base_lng + (random.uniform(-0.1, 0.1))
-                
-                # Add some random variation to ratings
-                rating = data['rating'] + random.uniform(-0.2, 0.2)
-                rating = max(0.0, min(5.0, rating))  # Clamp between 0 and 5
-                
-                mechanic = Mechanic.objects.create(
-                    name=data['name'],
-                    latitude=Decimal(str(lat)),
-                    longitude=Decimal(str(lng)),
-                    address=data['address'],
-                    contact=data['contact'],
-                    rating=Decimal(str(round(rating, 1))),
-                    working_hours=data['working_hours'],
-                    is_active=True
+        
+        created_mechanics = []
+        for mechanic_data in mechanics_data:
+            mechanic, created = Mechanic.objects.get_or_create(
+                name=mechanic_data['name'],
+                defaults=mechanic_data
+            )
+            if created:
+                created_mechanics.append(mechanic)
+                self.stdout.write(f'Created mechanic: {mechanic.name}')
+        
+        # Create sample reviews
+        review_titles = [
+            'Excellent Service!',
+            'Great work, highly recommended',
+            'Fast and reliable',
+            'Professional and honest',
+            'Best mechanic in town',
+            'Quick turnaround time',
+            'Fair pricing and quality work',
+            'Very satisfied with the service',
+            'Will definitely come back',
+            'Outstanding customer service'
+        ]
+        
+        review_comments = [
+            'They fixed my car quickly and the price was very reasonable. The staff was friendly and professional.',
+            'Great experience! The mechanic explained everything clearly and the work was done on time.',
+            'I\'ve been coming here for years and they never disappoint. Honest and reliable service.',
+            'Fast service and fair prices. They diagnosed the issue quickly and fixed it properly.',
+            'Excellent customer service and quality work. I would definitely recommend this place.',
+            'The mechanic was knowledgeable and took the time to explain what was wrong with my car.',
+            'Very professional service. They completed the repair ahead of schedule.',
+            'I was impressed with their attention to detail and the quality of their work.',
+            'Great communication throughout the process. I felt confident leaving my car with them.',
+            'The best auto repair shop I\'ve used. Honest, reliable, and reasonably priced.'
+        ]
+        
+        for mechanic in created_mechanics:
+            # Create 3-5 reviews per mechanic
+            num_reviews = random.randint(3, 5)
+            selected_users = random.sample(created_users, min(num_reviews, len(created_users)))
+            
+            for user in selected_users:
+                review, created = Review.objects.get_or_create(
+                    mechanic=mechanic,
+                    customer=user,
+                    defaults={
+                        'rating': random.randint(3, 5),
+                        'title': random.choice(review_titles),
+                        'comment': random.choice(review_comments),
+                        'is_verified': random.choice([True, False]),
+                        'is_public': True
+                    }
                 )
-                
-                self.stdout.write(f'Created mechanic: {mechanic.name} at {mechanic.latitude}, {mechanic.longitude}')
-
+                if created:
+                    self.stdout.write(f'Created review by {user.username} for {mechanic.name}')
+        
         self.stdout.write(
-            self.style.SUCCESS(f'Successfully created {min(num_mechanics, len(mechanic_data))} mechanic shops')
+            self.style.SUCCESS(
+                f'Successfully created:\n'
+                f'- {len(created_users)} users with customer profiles\n'
+                f'- {len(created_mechanics)} mechanic shops\n'
+                f'- {Review.objects.count()} reviews\n'
+                f'\nSample login credentials:\n'
+                f'Username: john_doe, Password: password123\n'
+                f'Username: jane_smith, Password: password123\n'
+                f'Username: mike_wilson, Password: password123\n'
+                f'Username: sarah_jones, Password: password123\n'
+                f'Username: david_brown, Password: password123'
+            )
         )

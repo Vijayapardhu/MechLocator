@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Write a Review - {{ mechanic.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .review-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .review-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .mechanic-info {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .mechanic-info h3 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .mechanic-info p {
+        color: #666;
+        margin: 5px 0;
+    }
+    
+    .review-form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .rating-section {
+        margin-bottom: 30px;
+    }
+    
+    .rating-label {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .star-rating {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .star {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .star:hover,
+    .star.active {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+    
+    .rating-text {
+        font-size: 1.1rem;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .review-guidelines {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .review-guidelines h4 {
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .review-guidelines ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .review-guidelines li {
+        margin-bottom: 8px;
+        color: #666;
+    }
+    
+    .character-count {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .character-count.warning {
+        color: #ffc107;
+    }
+    
+    .character-count.danger {
+        color: #dc3545;
+    }
+    
+    @media (max-width: 768px) {
+        .review-header h1 {
+            font-size: 2rem;
+        }
+        
+        .star-rating {
+            justify-content: center;
+        }
+        
+        .star {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <!-- Review Header -->
+    <div class="review-header">
+        <h1><i class="fas fa-star"></i> Write a Review</h1>
+        <p>Share your experience with other customers</p>
+    </div>
+    
+    <!-- Mechanic Info -->
+    <div class="mechanic-info">
+        <h3><i class="fas fa-wrench"></i> {{ mechanic.name }}</h3>
+        <p><i class="fas fa-map-marker-alt"></i> {{ mechanic.address }}</p>
+        <p><i class="fas fa-phone"></i> {{ mechanic.contact }}</p>
+        <p><i class="fas fa-star"></i> Current Rating: {{ mechanic.rating }}/5.0</p>
+    </div>
+    
+    <!-- Review Guidelines -->
+    <div class="review-guidelines">
+        <h4><i class="fas fa-info-circle"></i> Review Guidelines</h4>
+        <ul>
+            <li>Be honest and constructive in your feedback</li>
+            <li>Focus on your actual experience with the service</li>
+            <li>Avoid personal attacks or inappropriate language</li>
+            <li>Your review will be visible to other customers</li>
+            <li>You can edit or delete your review later</li>
+        </ul>
+    </div>
+    
+    <!-- Review Form -->
+    <div class="review-form-container">
+        <form method="post" id="reviewForm">
+            {% csrf_token %}
+            
+            <!-- Rating Section -->
+            <div class="rating-section">
+                <label class="rating-label">Rate your experience:</label>
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">☆</span>
+                    <span class="star" data-rating="2">☆</span>
+                    <span class="star" data-rating="3">☆</span>
+                    <span class="star" data-rating="4">☆</span>
+                    <span class="star" data-rating="5">☆</span>
+                </div>
+                <div class="rating-text" id="ratingText">Click stars to rate</div>
+                {{ form.rating.as_hidden }}
+            </div>
+            
+            <!-- Title Field -->
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}" class="form-label">
+                    Review Title <span class="text-danger">*</span>
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger mt-2">
+                        {% for error in form.title.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="character-count" id="titleCount">0/100 characters</div>
+            </div>
+            
+            <!-- Comment Field -->
+            <div class="form-group">
+                <label for="{{ form.comment.id_for_label }}" class="form-label">
+                    Your Review <span class="text-danger">*</span>
+                </label>
+                {{ form.comment }}
+                {% if form.comment.errors %}
+                    <div class="text-danger mt-2">
+                        {% for error in form.comment.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="character-count" id="commentCount">0/1000 characters</div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'mechanics:mechanic_detail' mechanic.id %}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const ratingField = document.getElementById('id_rating');
+    const ratingText = document.getElementById('ratingText');
+    const titleField = document.getElementById('id_title');
+    const commentField = document.getElementById('id_comment');
+    const titleCount = document.getElementById('titleCount');
+    const commentCount = document.getElementById('commentCount');
+    const form = document.getElementById('reviewForm');
+    
+    const ratingLabels = [
+        '', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'
+    ];
+    
+    // Star rating functionality
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            setRating(rating);
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            highlightStars(rating);
+        });
+    });
+    
+    document.getElementById('starRating').addEventListener('mouseleave', function() {
+        const currentRating = parseInt(ratingField.value) || 0;
+        highlightStars(currentRating);
+    });
+    
+    function setRating(rating) {
+        ratingField.value = rating;
+        highlightStars(rating);
+        ratingText.textContent = `${rating}/5 - ${ratingLabels[rating]}`;
+    }
+    
+    function highlightStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.textContent = '★';
+                star.classList.add('active');
+            } else {
+                star.textContent = '☆';
+                star.classList.remove('active');
+            }
+        });
+    }
+    
+    // Character counting
+    function updateCharacterCount(field, countElement, maxLength) {
+        const length = field.value.length;
+        countElement.textContent = `${length}/${maxLength} characters`;
+        
+        countElement.className = 'character-count';
+        if (length > maxLength * 0.9) {
+            countElement.classList.add('warning');
+        }
+        if (length > maxLength) {
+            countElement.classList.add('danger');
+        }
+    }
+    
+    titleField.addEventListener('input', function() {
+        updateCharacterCount(this, titleCount, 100);
+    });
+    
+    commentField.addEventListener('input', function() {
+        updateCharacterCount(this, commentCount, 1000);
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const rating = parseInt(ratingField.value);
+        const title = titleField.value.trim();
+        const comment = commentField.value.trim();
+        
+        if (!rating) {
+            e.preventDefault();
+            alert('Please select a rating before submitting your review.');
+            return;
+        }
+        
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a review title.');
+            titleField.focus();
+            return;
+        }
+        
+        if (!comment) {
+            e.preventDefault();
+            alert('Please write your review.');
+            commentField.focus();
+            return;
+        }
+        
+        if (title.length < 5) {
+            e.preventDefault();
+            alert('Review title must be at least 5 characters long.');
+            titleField.focus();
+            return;
+        }
+        
+        if (comment.length < 10) {
+            e.preventDefault();
+            alert('Review comment must be at least 10 characters long.');
+            commentField.focus();
+            return;
+        }
+    });
+    
+    // Initialize character counts
+    updateCharacterCount(titleField, titleCount, 100);
+    updateCharacterCount(commentField, commentCount, 1000);
+});
+</script>
+{% endblock %}

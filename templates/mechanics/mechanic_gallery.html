@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ mechanic.name }} - Gallery{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gallery-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .gallery-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .gallery-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .gallery-item {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .gallery-item.featured {
+        border: 3px solid #ffc107;
+        grid-column: span 2;
+    }
+    
+    .gallery-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-item:hover .gallery-image {
+        transform: scale(1.05);
+    }
+    
+    .gallery-info {
+        padding: 20px;
+        background: white;
+    }
+    
+    .gallery-caption {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .gallery-date {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #ffc107;
+        color: #333;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 2;
+    }
+    
+    .empty-gallery {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        margin: 40px 0;
+    }
+    
+    .empty-gallery i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-gallery h3 {
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .empty-gallery p {
+        color: #868e96;
+        font-size: 1.1rem;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    @media (max-width: 768px) {
+        .gallery-header h1 {
+            font-size: 2rem;
+        }
+        
+        .gallery-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .gallery-item.featured {
+            grid-column: span 1;
+        }
+        
+        .gallery-image {
+            height: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+    <!-- Gallery Header -->
+    <div class="gallery-header">
+        <h1><i class="fas fa-images"></i> {{ mechanic.name }} Gallery</h1>
+        <p>Explore our workshop and services through photos</p>
+        <a href="{% url 'mechanics:mechanic_detail' mechanic.id %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Shop Details
+        </a>
+    </div>
+    
+    {% if gallery_photos %}
+        <!-- Gallery Grid -->
+        <div class="gallery-grid">
+            {% for photo in gallery_photos %}
+                <div class="gallery-item {% if photo.is_featured %}featured{% endif %}">
+                    {% if photo.is_featured %}
+                        <div class="featured-badge">
+                            <i class="fas fa-star"></i> Featured
+                        </div>
+                    {% endif %}
+                    
+                    <img src="{{ photo.image.url }}" 
+                         alt="{{ photo.caption|default:'Gallery Photo' }}" 
+                         class="gallery-image"
+                         loading="lazy">
+                    
+                    <div class="gallery-info">
+                        {% if photo.caption %}
+                            <div class="gallery-caption">{{ photo.caption }}</div>
+                        {% endif %}
+                        
+                        <div class="gallery-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            {{ photo.uploaded_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Gallery Stats -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Gallery Info:</strong> 
+                    Showing {{ gallery_photos|length }} photo{{ gallery_photos|length|pluralize }} 
+                    for {{ mechanic.name }}. 
+                    {% for photo in gallery_photos %}
+                        {% if photo.is_featured %}
+                            Featured photo: "{{ photo.caption|default:'Untitled' }}"
+                            {% break %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <!-- Empty Gallery -->
+        <div class="empty-gallery">
+            <i class="fas fa-camera"></i>
+            <h3>No Photos Yet</h3>
+            <p>This mechanic shop hasn't uploaded any gallery photos yet.</p>
+            <p>Check back later or contact them directly for more information.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for enhanced gallery functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for gallery images
+    const galleryImages = document.querySelectorAll('.gallery-image');
+    
+    galleryImages.forEach(function(img) {
+        img.addEventListener('click', function() {
+            // Create modal or lightbox functionality here
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                cursor: pointer;
+            `;
+            
+            const modalImg = document.createElement('img');
+            modalImg.src = this.src;
+            modalImg.style.cssText = `
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+                border-radius: 10px;
+            `;
+            
+            modal.appendChild(modalImg);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+        });
+    });
+    
+    // Add loading animation for images
+    galleryImages.forEach(function(img) {
+        img.addEventListener('load', function() {
+            this.style.opacity = '1';
+        });
+        
+        img.addEventListener('error', function() {
+            this.style.opacity = '0.5';
+            this.alt = 'Failed to load image';
+        });
+    });
+});
+</script>
+{% endblock %}

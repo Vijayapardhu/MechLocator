@@ -203,6 +203,63 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Full Reviews Section -->
+            {% if reviews %}
+            <div class="info-card" id="reviews">
+                <h3 class="mb-4">
+                    <i class="fas fa-star me-2 text-warning"></i>Customer Reviews
+                </h3>
+                
+                {% for review in reviews %}
+                    <div class="review-item mb-4 pb-4 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="mb-1">{{ review.title }}</h5>
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="me-3">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ms-2 text-muted">{{ review.rating }}/5</span>
+                                    </div>
+                                    <span class="badge bg-secondary">{{ review.get_rating_display }}</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                {% if review.customer.customer_profile.profile_image %}
+                                    <img src="{{ review.customer.customer_profile.profile_image.url }}" 
+                                         alt="{{ review.customer.first_name|default:review.customer.username }}" 
+                                         class="rounded-circle" 
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <strong>{{ review.customer.first_name|default:review.customer.username }}</strong>
+                                {% if review.is_verified %}
+                                    <i class="fas fa-check-circle text-success ms-1" title="Verified Review"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <p class="mb-0">{{ review.comment }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
 
         <!-- Right Column - Actions & Quick Info -->
@@ -265,6 +322,102 @@
                     <i class="fas fa-business-time me-2 text-info"></i>Business Hours
                 </h4>
                 <p class="mb-0">{{ mechanic.working_hours|truncatewords:20 }}</p>
+            </div>
+
+            <!-- Gallery Preview -->
+            {% if gallery_photos %}
+            <div class="info-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-images me-2 text-primary"></i>Gallery Preview
+                </h4>
+                <div class="row g-2">
+                    {% for photo in gallery_photos %}
+                        <div class="col-4">
+                            <img src="{{ photo.image.url }}" 
+                                 alt="{{ photo.caption|default:'Gallery Photo' }}" 
+                                 class="img-fluid rounded"
+                                 style="height: 80px; object-fit: cover; width: 100%;">
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'mechanics:mechanic_gallery' mechanic.id %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-images me-2"></i>View Full Gallery
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reviews Section -->
+            <div class="info-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-star me-2 text-warning"></i>Customer Reviews
+                </h4>
+                {% if reviews %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">{{ reviews.count }} Review{{ reviews.count|pluralize }}</span>
+                            <span class="text-muted">Average: {{ mechanic.rating }}/5</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Reviews -->
+                    {% for review in reviews|slice:":3" %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ review.customer.first_name|default:review.customer.username }}</strong>
+                                    {% if review.is_verified %}
+                                        <i class="fas fa-check-circle text-success ms-1" title="Verified Review"></i>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <h6 class="mb-1">{{ review.title }}</h6>
+                            <p class="mb-0 text-muted small">{{ review.comment|truncatewords:15 }}</p>
+                        </div>
+                    {% endfor %}
+                    
+                    {% if reviews.count > 3 %}
+                        <a href="#reviews" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-comments me-2"></i>View All Reviews
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted mb-3">No reviews yet. Be the first to review this mechanic!</p>
+                {% endif %}
+                
+                <!-- Review Action -->
+                {% if user.is_authenticated %}
+                    {% if user_review %}
+                        <div class="mt-3">
+                            <a href="{% url 'mechanics:edit_review' user_review.id %}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-edit me-2"></i>Edit My Review
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="mt-3">
+                            <a href="{% url 'mechanics:submit_review' mechanic.id %}" class="btn btn-warning w-100">
+                                <i class="fas fa-star me-2"></i>Write a Review
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="mt-3">
+                        <a href="{% url 'mechanics:register' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up to Review
+                        </a>
+                    </div>
+                {% endif %}
             </div>
 
             <!-- Report Issue -->

@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .profile-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 20px;
+        border: 4px solid #667eea;
+    }
+    
+    .profile-info h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+    }
+    
+    .profile-info p {
+        margin: 5px 0 0 0;
+        color: #666;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+    }
+    
+    .reviews-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .review-item {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .review-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .review-mechanic {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .review-rating {
+        display: flex;
+        gap: 5px;
+        margin: 10px 0;
+    }
+    
+    .star {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+    
+    .review-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .review-comment {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+    
+    .review-date {
+        font-size: 0.9rem;
+        color: #999;
+        margin-bottom: 10px;
+    }
+    
+    .review-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn-edit {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-edit:hover {
+        background: #218838;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        background: #c82333;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .activity-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-bottom: 1px solid #f8f9fa;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-description {
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .activity-date {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+        
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            margin-right: 0;
+            margin-bottom: 15px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+        
+        .review-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Customer Dashboard</h1>
+        <p>Welcome back, {{ user.first_name|default:user.username }}!</p>
+    </div>
+    
+    <!-- Profile Section -->
+    <div class="profile-section">
+        <div class="profile-header">
+            {% if customer_profile.profile_image %}
+                <img src="{{ customer_profile.profile_image.url }}" alt="Profile" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar" style="background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    <i class="fas fa-user"></i>
+                </div>
+            {% endif %}
+            <div class="profile-info">
+                <h3>{{ customer_profile.full_name }}</h3>
+                <p><i class="fas fa-envelope"></i> {{ user.email }}</p>
+                {% if customer_profile.phone %}
+                    <p><i class="fas fa-phone"></i> {{ customer_profile.phone }}</p>
+                {% endif %}
+                {% if customer_profile.is_verified %}
+                    <p><i class="fas fa-check-circle text-success"></i> Verified Customer</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <a href="{% url 'mechanics:edit_customer_profile' %}" class="btn-primary">
+            <i class="fas fa-edit"></i> Edit Profile
+        </a>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-number">{{ reviews.count }}</div>
+            <div class="stat-label">Reviews Written</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-number">{{ customer_profile.created_at|timesince }}</div>
+            <div class="stat-label">Member Since</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-number">{{ recent_activity.count }}</div>
+            <div class="stat-label">Recent Activities</div>
+        </div>
+        
+        {% if customer_profile.is_verified %}
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-number">Verified</div>
+            <div class="stat-label">Account Status</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+        <h2 class="section-title">
+            <i class="fas fa-star"></i> My Reviews
+        </h2>
+        
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="review-mechanic">{{ review.mechanic.name }}</div>
+                    </div>
+                    
+                    <div class="review-rating">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <i class="fas fa-star star"></i>
+                            {% else %}
+                                <i class="far fa-star star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span style="margin-left: 10px; color: #666;">{{ review.rating }}/5</span>
+                    </div>
+                    
+                    <div class="review-title">{{ review.title }}</div>
+                    <div class="review-comment">{{ review.comment }}</div>
+                    <div class="review-date">
+                        <i class="fas fa-calendar"></i> {{ review.created_at|date:"M d, Y" }}
+                        {% if review.is_verified %}
+                            <span class="text-success ml-2">
+                                <i class="fas fa-check-circle"></i> Verified
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="review-actions">
+                        <a href="{% url 'mechanics:edit_review' review.id %}" class="btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'mechanics:delete_review' review.id %}" class="btn-delete">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-star"></i>
+                <h3>No Reviews Yet</h3>
+                <p>You haven't written any reviews yet. Start by reviewing a mechanic shop you've used!</p>
+                <a href="{% url 'mechanics:mechanic_list' %}" class="btn-primary">
+                    <i class="fas fa-search"></i> Find Mechanics
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recent Activity Section -->
+    <div class="activity-section">
+        <h2 class="section-title">
+            <i class="fas fa-history"></i> Recent Activity
+        </h2>
+        
+        {% if recent_activity %}
+            {% for activity in recent_activity %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        {% if activity.action == 'review' %}
+                            <i class="fas fa-star"></i>
+                        {% elif activity.action == 'view' %}
+                            <i class="fas fa-eye"></i>
+                        {% elif activity.action == 'search' %}
+                            <i class="fas fa-search"></i>
+                        {% elif activity.action == 'call' %}
+                            <i class="fas fa-phone"></i>
+                        {% else %}
+                            <i class="fas fa-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-description">{{ activity.details }}</div>
+                        <div class="activity-date">
+                            <i class="fas fa-clock"></i> {{ activity.timestamp|date:"M d, Y g:i A" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <h3>No Recent Activity</h3>
+                <p>Your recent activities will appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

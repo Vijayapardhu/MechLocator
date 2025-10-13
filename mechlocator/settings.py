@@ -80,8 +80,15 @@ WSGI_APPLICATION = 'mechlocator.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.nberhjmbwsrsgzxkmqkw',
+        'PASSWORD': 'nVJY8l25iomFLLQw',
+        'HOST': 'aws-1-us-east-2.pooler.supabase.com',
+        'PORT': '6543',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 }
 

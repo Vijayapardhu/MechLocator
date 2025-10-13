@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Review - {{ review.mechanic.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .delete-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .delete-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .review-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .mechanic-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+    }
+    
+    .mechanic-info h3 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .mechanic-info p {
+        color: #666;
+        margin: 5px 0;
+    }
+    
+    .review-content {
+        margin-bottom: 25px;
+    }
+    
+    .review-rating {
+        color: #ffc107;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .review-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .review-comment {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+    
+    .review-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .warning-box h4 {
+        color: #856404;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .warning-box p {
+        color: #856404;
+        margin: 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .confirmation-form {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .confirmation-checkbox {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .confirmation-checkbox input[type="checkbox"] {
+        transform: scale(1.2);
+    }
+    
+    .confirmation-checkbox label {
+        color: #333;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+        .delete-header h1 {
+            font-size: 2rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-delete,
+        .btn-cancel {
+            width: 100%;
+        }
+        
+        .review-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <!-- Delete Header -->
+    <div class="delete-header">
+        <h1><i class="fas fa-trash-alt"></i> Delete Review</h1>
+        <p>Are you sure you want to delete your review?</p>
+    </div>
+    
+    <!-- Review to Delete -->
+    <div class="review-card">
+        <div class="mechanic-info">
+            <h3><i class="fas fa-wrench"></i> {{ review.mechanic.name }}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> {{ review.mechanic.address }}</p>
+            <p><i class="fas fa-phone"></i> {{ review.mechanic.contact }}</p>
+        </div>
+        
+        <div class="review-content">
+            <div class="review-rating">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                        ★
+                    {% else %}
+                        ☆
+                    {% endif %}
+                {% endfor %}
+                {{ review.rating }}/5 - {{ review.get_rating_display }}
+            </div>
+            
+            <h4 class="review-title">{{ review.title }}</h4>
+            <p class="review-comment">{{ review.comment }}</p>
+            
+            <div class="review-meta">
+                <span><i class="fas fa-calendar"></i> Posted on {{ review.created_at|date:"M d, Y" }}</span>
+                {% if review.is_verified %}
+                    <span><i class="fas fa-check-circle text-success"></i> Verified Review</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Warning -->
+    <div class="warning-box">
+        <h4>
+            <i class="fas fa-exclamation-triangle"></i>
+            Important Notice
+        </h4>
+        <p>
+            Once you delete this review, it cannot be recovered. This action will also update the mechanic's overall rating. 
+            If you want to keep your review but make changes, consider editing it instead.
+        </p>
+    </div>
+    
+    <!-- Confirmation Form -->
+    <div class="confirmation-form">
+        <h3 class="mb-4">Confirm Deletion</h3>
+        
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+            
+            <div class="confirmation-checkbox">
+                <input type="checkbox" id="confirmDelete" name="confirm" required>
+                <label for="confirmDelete">I understand that this action cannot be undone</label>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{% url 'mechanics:mechanic_detail' review.mechanic.id %}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-delete" id="deleteButton" disabled>
+                    <i class="fas fa-trash-alt"></i> Delete Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    const deleteForm = document.getElementById('deleteForm');
+    
+    // Enable/disable delete button based on checkbox
+    confirmCheckbox.addEventListener('change', function() {
+        deleteButton.disabled = !this.checked;
+        
+        if (this.checked) {
+            deleteButton.style.opacity = '1';
+        } else {
+            deleteButton.style.opacity = '0.5';
+        }
+    });
+    
+    // Form submission confirmation
+    deleteForm.addEventListener('submit', function(e) {
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Please confirm that you understand this action cannot be undone.');
+            return;
+        }
+        
+        const confirmed = confirm(
+            'Are you absolutely sure you want to delete this review?\n\n' +
+            'This action cannot be undone and will affect the mechanic\'s rating.'
+        );
+        
+        if (!confirmed) {
+            e.preventDefault();
+        } else {
+            // Show loading state
+            deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            deleteButton.disabled = true;
+        }
+    });
+    
+    // Add some visual feedback
+    const reviewCard = document.querySelector('.review-card');
+    reviewCard.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.15)';
+    });
+    
+    reviewCard.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+    });
+});
+</script>
+{% endblock %}

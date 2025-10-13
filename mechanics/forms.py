@@ -95,3 +95,48 @@ class UserRegistrationForm(UserCreationForm):
                 user.profile.save()
         
         return user
+
+
+class ReviewForm(forms.ModelForm):
+    """Form for submitting mechanic reviews."""
+    
+    class Meta:
+        from .models import Review
+        model = Review
+        fields = ['rating', 'title', 'comment']
+        widgets = {
+            'rating': forms.Select(attrs={
+                'class': 'form-select',
+                'placeholder': 'Select rating'
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter review title'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Write your detailed review here...'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Make all fields required
+        for field in self.fields.values():
+            field.required = True
+    
+    def clean_title(self):
+        """Validate review title."""
+        title = self.cleaned_data.get('title')
+        if title and len(title.strip()) < 5:
+            raise ValidationError('Review title must be at least 5 characters long.')
+        return title.strip()
+    
+    def clean_comment(self):
+        """Validate review comment."""
+        comment = self.cleaned_data.get('comment')
+        if comment and len(comment.strip()) < 10:
+            raise ValidationError('Review comment must be at least 10 characters long.')
+        return comment.strip()

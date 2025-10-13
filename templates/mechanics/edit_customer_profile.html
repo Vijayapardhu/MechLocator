@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .profile-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .profile-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+    
+    .profile-form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 25px;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-control:invalid {
+        border-color: #dc3545;
+    }
+    
+    .profile-image-section {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .current-profile-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+        border: 4px solid #667eea;
+    }
+    
+    .default-profile-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #667eea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        margin: 0 auto 15px auto;
+        border: 4px solid #667eea;
+    }
+    
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .file-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .file-input-button {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .file-input-button:hover {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .form-help {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .required {
+        color: #dc3545;
+    }
+    
+    .character-count {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .character-count.warning {
+        color: #ffc107;
+    }
+    
+    .character-count.danger {
+        color: #dc3545;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-header h1 {
+            font-size: 2rem;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <h1><i class="fas fa-user-edit"></i> Edit Profile</h1>
+        <p>Update your personal information and preferences</p>
+    </div>
+    
+    <!-- Profile Form -->
+    <div class="profile-form-container">
+        <form method="post" enctype="multipart/form-data" id="profileForm">
+            {% csrf_token %}
+            
+            <!-- Profile Image Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-camera"></i>
+                    Profile Picture
+                </h3>
+                
+                <div class="profile-image-section">
+                    {% if customer_profile.profile_image %}
+                        <img src="{{ customer_profile.profile_image.url }}" 
+                             alt="Current Profile" 
+                             class="current-profile-image">
+                    {% else %}
+                        <div class="default-profile-image">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="file-input-wrapper">
+                        <input type="file" 
+                               name="profile_image" 
+                               id="profile_image" 
+                               class="file-input"
+                               accept="image/*">
+                        <label for="profile_image" class="file-input-button">
+                            <i class="fas fa-upload me-2"></i>Choose New Photo
+                        </label>
+                    </div>
+                    
+                    <p class="form-help mt-2">
+                        <i class="fas fa-info-circle"></i>
+                        Recommended size: 400x400px. Max file size: 5MB
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Personal Information
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="first_name" class="form-label">
+                                First Name <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="first_name" 
+                                   id="first_name" 
+                                   class="form-control"
+                                   value="{{ user.first_name }}"
+                                   required
+                                   maxlength="30">
+                            <div class="character-count" id="firstNameCount">0/30 characters</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="last_name" class="form-label">
+                                Last Name <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="last_name" 
+                                   id="last_name" 
+                                   class="form-control"
+                                   value="{{ user.last_name }}"
+                                   required
+                                   maxlength="30">
+                            <div class="character-count" id="lastNameCount">0/30 characters</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        Email Address <span class="required">*</span>
+                    </label>
+                    <input type="email" 
+                           name="email" 
+                           id="email" 
+                           class="form-control"
+                           value="{{ user.email }}"
+                           required
+                           maxlength="254">
+                    <div class="form-help">
+                        <i class="fas fa-info-circle"></i>
+                        This email will be used for account notifications
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-phone"></i>
+                    Contact Information
+                </h3>
+                
+                <div class="form-group">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" 
+                           name="phone" 
+                           id="phone" 
+                           class="form-control"
+                           value="{{ customer_profile.phone }}"
+                           maxlength="20"
+                           placeholder="e.g., +1 (555) 123-4567">
+                    <div class="form-help">
+                        <i class="fas fa-info-circle"></i>
+                        Optional. Used for account verification and notifications
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea name="address" 
+                              id="address" 
+                              class="form-control"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="Enter your full address">{{ customer_profile.address }}</textarea>
+                    <div class="character-count" id="addressCount">0/500 characters</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_of_birth" class="form-label">Date of Birth</label>
+                    <input type="date" 
+                           name="date_of_birth" 
+                           id="date_of_birth" 
+                           class="form-control"
+                           value="{{ customer_profile.date_of_birth|date:'Y-m-d' }}">
+                    <div class="form-help">
+                        <i class="fas fa-info-circle"></i>
+                        Optional. Used for age verification and personalized services
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'mechanics:customer_dashboard' %}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileForm');
+    const firstNameField = document.getElementById('first_name');
+    const lastNameField = document.getElementById('last_name');
+    const addressField = document.getElementById('address');
+    const firstNameCount = document.getElementById('firstNameCount');
+    const lastNameCount = document.getElementById('lastNameCount');
+    const addressCount = document.getElementById('addressCount');
+    const profileImageInput = document.getElementById('profile_image');
+    
+    // Character counting
+    function updateCharacterCount(field, countElement, maxLength) {
+        const length = field.value.length;
+        countElement.textContent = `${length}/${maxLength} characters`;
+        
+        countElement.className = 'character-count';
+        if (length > maxLength * 0.9) {
+            countElement.classList.add('warning');
+        }
+        if (length > maxLength) {
+            countElement.classList.add('danger');
+        }
+    }
+    
+    firstNameField.addEventListener('input', function() {
+        updateCharacterCount(this, firstNameCount, 30);
+    });
+    
+    lastNameField.addEventListener('input', function() {
+        updateCharacterCount(this, lastNameCount, 30);
+    });
+    
+    addressField.addEventListener('input', function() {
+        updateCharacterCount(this, addressCount, 500);
+    });
+    
+    // Profile image preview
+    profileImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const currentImage = document.querySelector('.current-profile-image, .default-profile-image');
+                if (currentImage) {
+                    if (currentImage.classList.contains('default-profile-image')) {
+                        currentImage.className = 'current-profile-image';
+                    }
+                    currentImage.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const firstName = firstNameField.value.trim();
+        const lastName = lastNameField.value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!firstName) {
+            e.preventDefault();
+            alert('Please enter your first name.');
+            firstNameField.focus();
+            return;
+        }
+        
+        if (!lastName) {
+            e.preventDefault();
+            alert('Please enter your last name.');
+            lastNameField.focus();
+            return;
+        }
+        
+        if (!email) {
+            e.preventDefault();
+            alert('Please enter your email address.');
+            document.getElementById('email').focus();
+            return;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            alert('Please enter a valid email address.');
+            document.getElementById('email').focus();
+            return;
+        }
+        
+        // Phone validation (if provided)
+        const phone = document.getElementById('phone').value.trim();
+        if (phone) {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+            if (!phoneRegex.test(cleanPhone) || cleanPhone.length < 10) {
+                e.preventDefault();
+                alert('Please enter a valid phone number.');
+                document.getElementById('phone').focus();
+                return;
+            }
+        }
+    });
+    
+    // Initialize character counts
+    updateCharacterCount(firstNameField, firstNameCount, 30);
+    updateCharacterCount(lastNameField, lastNameCount, 30);
+    updateCharacterCount(addressField, addressCount, 500);
+});
+</script>
+{% endblock %}

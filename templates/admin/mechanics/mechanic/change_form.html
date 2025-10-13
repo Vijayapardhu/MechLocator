@@ -163,12 +163,12 @@
         <!-- Coordinate Display -->
         <div class="coordinate-display">
             <div class="coordinate-field">
-                <label for="id_latitude">{% trans 'Latitude' %}</label>
-                <input type="text" id="id_latitude" name="latitude" readonly />
+                <label for="coordinate_latitude">{% trans 'Latitude' %}</label>
+                <input type="text" id="coordinate_latitude" name="coordinate_latitude" readonly />
             </div>
             <div class="coordinate-field">
-                <label for="id_longitude">{% trans 'Longitude' %}</label>
-                <input type="text" id="id_longitude" name="longitude" readonly />
+                <label for="coordinate_longitude">{% trans 'Longitude' %}</label>
+                <input type="text" id="coordinate_longitude" name="coordinate_longitude" readonly />
             </div>
         </div>
         
@@ -228,15 +228,23 @@ function initMap() {
     // Initialize existing coordinates if available
     const latField = document.getElementById('id_latitude');
     const lngField = document.getElementById('id_longitude');
+    const coordLatField = document.getElementById('coordinate_latitude');
+    const coordLngField = document.getElementById('coordinate_longitude');
     
-    if (latField && lngField && latField.value && lngField.value) {
-        const position = {
-            lat: parseFloat(latField.value),
-            lng: parseFloat(lngField.value)
-        };
-        placeMarker(position);
-        map.setCenter(position);
-        map.setZoom(15);
+    // Sync coordinate display with form fields
+    if (latField && lngField) {
+        coordLatField.value = latField.value;
+        coordLngField.value = lngField.value;
+        
+        if (latField.value && lngField.value) {
+            const position = {
+                lat: parseFloat(latField.value),
+                lng: parseFloat(lngField.value)
+            };
+            placeMarker(position);
+            map.setCenter(position);
+            map.setZoom(15);
+        }
     }
     
     // Initialize rating preview
@@ -271,10 +279,21 @@ function placeMarker(position) {
 function updateCoordinates(position) {
     const latField = document.getElementById('id_latitude');
     const lngField = document.getElementById('id_longitude');
+    const coordLatField = document.getElementById('coordinate_latitude');
+    const coordLngField = document.getElementById('coordinate_longitude');
     
+    const latValue = position.lat().toFixed(6);
+    const lngValue = position.lng().toFixed(6);
+    
+    // Update both form fields and coordinate display
     if (latField && lngField) {
-        latField.value = position.lat().toFixed(6);
-        lngField.value = position.lng().toFixed(6);
+        latField.value = latValue;
+        lngField.value = lngValue;
+    }
+    
+    if (coordLatField && coordLngField) {
+        coordLatField.value = latValue;
+        coordLngField.value = lngValue;
     }
 }
 
@@ -323,10 +342,17 @@ function clearMarker() {
     
     const latField = document.getElementById('id_latitude');
     const lngField = document.getElementById('id_longitude');
+    const coordLatField = document.getElementById('coordinate_latitude');
+    const coordLngField = document.getElementById('coordinate_longitude');
     
     if (latField && lngField) {
         latField.value = '';
         lngField.value = '';
+    }
+    
+    if (coordLatField && coordLngField) {
+        coordLatField.value = '';
+        coordLngField.value = '';
     }
 }
 

@@ -7,8 +7,8 @@ from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import login
 from geopy.distance import geodesic
-from .models import Mechanic, ActivityLog
-from .forms import UserRegistrationForm
+from .models import Mechanic, ActivityLog, MechanicGallery, Review, CustomerProfile
+from .forms import UserRegistrationForm, ReviewForm
 import json
 import logging
 
@@ -308,3 +308,199 @@ def log_call_api(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid request data'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+
+def mechanic_gallery(request, mechanic_id):
+    """Gallery view for a mechanic shop."""
+    mechanic = get_object_or_404(Mechanic, id=mechanic_id, is_active=True)
+    gallery_photos = MechanicGallery.objects.filter(mechanic=mechanic).order_by('-is_featured', '-uploaded_at')
+    
+    context = {
+        'mechanic': mechanic,
+        'gallery_photos': gallery_photos,
+    }
+    
+    log_activity(request, 'view', f'Gallery viewed for: {mechanic.name}')
+    return render(request, 'mechanics/mechanic_gallery.html', context)
+
+
+def mechanic_detail(request, mechanic_id):
+    """Detailed view of a mechanic shop with reviews."""
+    mechanic = get_object_or_404(Mechanic, id=mechanic_id, is_active=True)
+    
+    # Get user location for distance calculation
+    user_lat = request.GET.get('lat')
+    user_lng = request.GET.get('lng')
+    
+    if user_lat and user_lng:
+        try:
+            user_location = (float(user_lat), float(user_lng))
+            mechanic_location = (mechanic.latitude, mechanic.longitude)
+            distance = geodesic(user_location, mechanic_location).kilometers
+            mechanic.distance_from_user = round(distance, 1)
+        except (ValueError, TypeError):
+            mechanic.distance_from_user = None
+    
+    # Get reviews
+    reviews = Review.objects.filter(mechanic=mechanic, is_public=True).order_by('-created_at')
+    
+    # Get gallery photos (limit to 6 for preview)
+    gallery_photos = MechanicGallery.objects.filter(mechanic=mechanic)[:6]
+    
+    # Check if user has already reviewed this mechanic
+    user_review = None
+    if request.user.is_authenticated:
+        try:
+            user_review = Review.objects.get(mechanic=mechanic, customer=request.user)
+        except Review.DoesNotExist:
+            pass
+    
+    log_activity(request, 'view', f'Mechanic detail viewed: {mechanic.name}')
+    
+    context = {
+        'mechanic': mechanic,
+        'user_lat': user_lat,
+        'user_lng': user_lng,
+        'reviews': reviews,
+        'gallery_photos': gallery_photos,
+        'user_review': user_review,
+        'review_form': ReviewForm() if request.user.is_authenticated and not user_review else None,
+    }
+    return render(request, 'mechanics/mechanic_detail.html', context)
+
+
+@login_required
+def submit_review(request, mechanic_id):
+    """Submit a review for a mechanic."""
+    mechanic = get_object_or_404(Mechanic, id=mechanic_id, is_active=True)
+    
+    # Check if user already reviewed this mechanic
+    existing_review = Review.objects.filter(mechanic=mechanic, customer=request.user).first()
+    if existing_review:
+        messages.warning(request, 'You have already reviewed this mechanic shop.')
+        return redirect('mechanics:mechanic_detail', mechanic_id=mechanic.id)
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.mechanic = mechanic
+            review.customer = request.user
+            review.save()
+            
+            # Create or update customer profile
+            customer_profile, created = CustomerProfile.objects.get_or_create(user=request.user)
+            
+            log_activity(request, 'review', f'Review submitted for: {mechanic.name}')
+            messages.success(request, 'Thank you for your review!')
+            return redirect('mechanics:mechanic_detail', mechanic_id=mechanic.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ReviewForm()
+    
+    context = {
+        'mechanic': mechanic,
+        'form': form,
+    }
+    return render(request, 'mechanics/submit_review.html', context)
+
+
+@login_required
+def edit_review(request, review_id):
+    """Edit an existing review."""
+    review = get_object_or_404(Review, id=review_id, customer=request.user)
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            log_activity(request, 'review', f'Review edited for: {review.mechanic.name}')
+            messages.success(request, 'Your review has been updated.')
+            return redirect('mechanics:mechanic_detail', mechanic_id=review.mechanic.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ReviewForm(instance=review)
+    
+    context = {
+        'review': review,
+        'form': form,
+    }
+    return render(request, 'mechanics/edit_review.html', context)
+
+
+@login_required
+def delete_review(request, review_id):
+    """Delete a review."""
+    review = get_object_or_404(Review, id=review_id, customer=request.user)
+    mechanic_id = review.mechanic.id
+    
+    if request.method == 'POST':
+        log_activity(request, 'review', f'Review deleted for: {review.mechanic.name}')
+        review.delete()
+        messages.success(request, 'Your review has been deleted.')
+        return redirect('mechanics:mechanic_detail', mechanic_id=mechanic_id)
+    
+    context = {
+        'review': review,
+    }
+    return render(request, 'mechanics/delete_review.html', context)
+
+
+@login_required
+def customer_dashboard(request):
+    """Customer dashboard with reviews and profile management."""
+    user = request.user
+    
+    # Get customer profile
+    customer_profile, created = CustomerProfile.objects.get_or_create(user=user)
+    
+    # Get user's reviews
+    reviews = Review.objects.filter(customer=user).order_by('-created_at')
+    
+    # Get user's recent activity
+    recent_activity = ActivityLog.objects.filter(user=user).order_by('-timestamp')[:10]
+    
+    context = {
+        'user': user,
+        'customer_profile': customer_profile,
+        'reviews': reviews,
+        'recent_activity': recent_activity,
+    }
+    
+    log_activity(request, 'view', 'Customer dashboard visited')
+    return render(request, 'mechanics/customer_dashboard.html', context)
+
+
+@login_required
+def edit_customer_profile(request):
+    """Edit customer profile."""
+    customer_profile, created = CustomerProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        # Update user fields
+        request.user.first_name = request.POST.get('first_name', '').strip()
+        request.user.last_name = request.POST.get('last_name', '').strip()
+        request.user.email = request.POST.get('email', '').strip()
+        request.user.save()
+        
+        # Update customer profile fields
+        customer_profile.phone = request.POST.get('phone', '').strip()
+        customer_profile.address = request.POST.get('address', '').strip()
+        customer_profile.date_of_birth = request.POST.get('date_of_birth') or None
+        
+        # Handle profile image upload
+        if 'profile_image' in request.FILES:
+            customer_profile.profile_image = request.FILES['profile_image']
+        
+        customer_profile.save()
+        
+        log_activity(request, 'profile_update', 'Customer profile updated')
+        messages.success(request, 'Your profile has been updated.')
+        return redirect('mechanics:customer_dashboard')
+    
+    context = {
+        'customer_profile': customer_profile,
+    }
+    return render(request, 'mechanics/edit_customer_profile.html', context)

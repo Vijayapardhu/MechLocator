@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.conf import settings
 import json
 
-from .models import Mechanic, UserProfile, ActivityLog, SearchQuery
+from .models import Mechanic, UserProfile, ActivityLog, SearchQuery, MechanicGallery, Review, CustomerProfile
 
 # Custom Admin Site (keeping for reference)
 class MechLocatorAdminSite(admin.AdminSite):
@@ -54,7 +54,7 @@ class MechanicAdmin(admin.ModelAdmin):
             'description': 'Enter coordinates or use the map picker below'
         }),
         ('Details', {
-            'fields': ('working_hours', 'image')
+            'fields': ('working_hours', 'image', 'profile_image')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -475,6 +475,137 @@ class SearchQueryAdmin(admin.ModelAdmin):
             'opts': self.model._meta,
         }
         return render(request, 'admin/mechanics/searchquery/analytics.html', context)
+
+# Gallery Admin
+@admin.register(MechanicGallery)
+class MechanicGalleryAdmin(admin.ModelAdmin):
+    list_display = ['mechanic', 'caption_display', 'is_featured', 'uploaded_at']
+    list_filter = ['is_featured', 'uploaded_at', 'mechanic']
+    search_fields = ['mechanic__name', 'caption']
+    list_editable = ['is_featured']
+    list_per_page = 25
+    
+    fieldsets = (
+        ('Photo Information', {
+            'fields': ('mechanic', 'image', 'caption', 'is_featured')
+        }),
+        ('Timestamps', {
+            'fields': ('uploaded_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ['uploaded_at', 'updated_at']
+    
+    def caption_display(self, obj):
+        if obj.caption:
+            return obj.caption[:50] + '...' if len(obj.caption) > 50 else obj.caption
+        return "No caption"
+    caption_display.short_description = 'Caption'
+
+# Review Admin
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ['customer', 'mechanic', 'rating_display', 'title_display', 'is_verified', 'is_public', 'created_at']
+    list_filter = ['rating', 'is_verified', 'is_public', 'created_at', 'mechanic']
+    search_fields = ['customer__username', 'mechanic__name', 'title', 'comment']
+    list_editable = ['is_verified', 'is_public']
+    list_per_page = 25
+    
+    fieldsets = (
+        ('Review Information', {
+            'fields': ('customer', 'mechanic', 'rating', 'title', 'comment')
+        }),
+        ('Moderation', {
+            'fields': ('is_verified', 'is_public')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def rating_display(self, obj):
+        stars = '★' * obj.rating + '☆' * (5 - obj.rating)
+        return format_html('<span title="{}">{} ({}/5)</span>', 
+                         obj.get_rating_display(), stars, obj.rating)
+    rating_display.short_description = 'Rating'
+    
+    def title_display(self, obj):
+        return obj.title[:50] + '...' if len(obj.title) > 50 else obj.title
+    title_display.short_description = 'Title'
+    
+    actions = ['verify_reviews', 'unverify_reviews', 'make_public', 'make_private']
+    
+    def verify_reviews(self, request, queryset):
+        updated = queryset.update(is_verified=True)
+        self.message_user(request, f'{updated} reviews have been verified.')
+    verify_reviews.short_description = "Verify selected reviews"
+    
+    def unverify_reviews(self, request, queryset):
+        updated = queryset.update(is_verified=False)
+        self.message_user(request, f'{updated} reviews have been unverified.')
+    unverify_reviews.short_description = "Unverify selected reviews"
+    
+    def make_public(self, request, queryset):
+        updated = queryset.update(is_public=True)
+        self.message_user(request, f'{updated} reviews have been made public.')
+    make_public.short_description = "Make selected reviews public"
+    
+    def make_private(self, request, queryset):
+        updated = queryset.update(is_public=False)
+        self.message_user(request, f'{updated} reviews have been made private.')
+    make_private.short_description = "Make selected reviews private"
+
+# Customer Profile Admin
+@admin.register(CustomerProfile)
+class CustomerProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'full_name_display', 'phone', 'is_verified', 'review_count_display', 'created_at']
+    list_filter = ['is_verified', 'created_at']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'user__email', 'phone']
+    list_editable = ['is_verified']
+    list_per_page = 25
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'profile_image')
+        }),
+        ('Contact Details', {
+            'fields': ('phone', 'address', 'date_of_birth')
+        }),
+        ('Account Status', {
+            'fields': ('is_verified',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def full_name_display(self, obj):
+        return obj.full_name
+    full_name_display.short_description = 'Full Name'
+    
+    def review_count_display(self, obj):
+        count = obj.review_count
+        return format_html('<span class="badge bg-info">{}</span>', count)
+    review_count_display.short_description = 'Reviews'
+    
+    actions = ['verify_customers', 'unverify_customers']
+    
+    def verify_customers(self, request, queryset):
+        updated = queryset.update(is_verified=True)
+        self.message_user(request, f'{updated} customers have been verified.')
+    verify_customers.short_description = "Verify selected customers"
+    
+    def unverify_customers(self, request, queryset):
+        updated = queryset.update(is_verified=False)
+        self.message_user(request, f'{updated} customers have been unverified.')
+    unverify_customers.short_description = "Unverify selected customers"
 
 # Note: Mechanic, ActivityLog, and SearchQuery are already registered with @admin.register decorators
 # User is registered in urls.py to avoid conflicts

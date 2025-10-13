@@ -127,8 +127,8 @@ MEDIA_ROOT = config('MEDIA_ROOT', default='media')
 
 # Supabase Storage Configuration
 SUPABASE_URL = 'https://nberhjmbwsrsgzxkmqkw.supabase.co'
-SUPABASE_ANON_KEY = config('SUPABASE_ANON_KEY', default='')
-SUPABASE_SERVICE_ROLE_KEY = config('SUPABASE_SERVICE_ROLE_KEY', default='')
+SUPABASE_ANON_KEY = config('SUPABASE_ANON_KEY', default='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZXJoam1id3Nyc2d6eGttcWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMDA3NDgsImV4cCI6MjA3NTc3Njc0OH0.qQM68xtxH1eaO_f09kuMg9D-qNHl-aR5HdryfWnhpbQ')
+SUPABASE_SERVICE_ROLE_KEY = config('SUPABASE_SERVICE_ROLE_KEY', default='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZXJoam1id3Nyc2d6eGttcWt3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDIwMDc0OCwiZXhwIjoyMDc1Nzc2NzQ4fQ.rKb70tCqpyWTpwFKrysQ7XEayTw3MIxm47wu9c3Ddb0')
 
 # AWS S3 Compatible Storage for Supabase
 AWS_ACCESS_KEY_ID = config('SUPABASE_SERVICE_ROLE_KEY', default='')

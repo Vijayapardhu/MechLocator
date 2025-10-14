@@ -143,10 +143,9 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 
 # Use Supabase for media files in production
-# Temporarily disabled until proper credentials are configured
-# if not DEBUG:
-#     DEFAULT_FILE_STORAGE = 'mechlocator.storage.SupabaseMediaStorage'
-#     STATICFILES_STORAGE = 'mechlocator.storage.SupabaseStaticStorage'
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'mechlocator.storage.SupabaseMediaStorage'
+    STATICFILES_STORAGE = 'mechlocator.storage.SupabaseStaticStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -156,19 +155,19 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Google Maps Configuration
-GOOGLE_MAPS_API_KEY = config('GOOGLE_MAPS_API_KEY', default='your-google-maps-api-key-here')
+GOOGLE_MAPS_API_KEY = config('GOOGLE_MAPS_API_KEY', default='AIzaSyDbMOBcw9mj0m6n38hNeGZ-72Z5WHxAcQM')
 
 # Production-ready Google Maps settings
 GOOGLE_MAPS_CONFIG = {
     'API_KEY': GOOGLE_MAPS_API_KEY,
     'LIBRARIES': ['places', 'geometry'],
     'VERSION': '3.54',  # Latest stable version
-    'REGION': 'US',  # Set to your target region
+    'REGION': 'IN',  # Set to your target region
     'LANGUAGE': 'en',  # Set to your target language
 }
 
 # Validate Google Maps API key in production
-if not DEBUG and GOOGLE_MAPS_API_KEY == 'your-google-maps-api-key-here':
+if not DEBUG and GOOGLE_MAPS_API_KEY == 'AIzaSyDbMOBcw9mj0m6n38hNeGZ-72Z5WHxAcQM':
     raise ValueError(
         "GOOGLE_MAPS_API_KEY must be set in production. "
         "Please configure your Google Maps API key in the .env file."

@@ -11,3 +11,4 @@ psycopg2
 psycopg
 django-storages==1.14.6
 boto3==1.40.50
+requests==2.31.0

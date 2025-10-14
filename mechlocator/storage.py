@@ -4,105 +4,70 @@ Custom storage backends for Supabase integration
 import os
 import requests
 from django.conf import settings
-from django.core.files.storage import Storage
-from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.utils.deconstruct import deconstructible
 
 
 @deconstructible
-class SupabaseStorage(Storage):
+class SupabaseStorage(FileSystemStorage):
     """
-    Custom storage backend for Supabase using REST API
+    Custom storage backend that stores files locally and uploads to Supabase
     """
     
     def __init__(self, bucket_name='media'):
         self.bucket_name = bucket_name
-        self.base_url = f"{settings.SUPABASE_URL}/storage/v1/object/{bucket_name}"
+        self.supabase_url = f"{settings.SUPABASE_URL}/storage/v1/object/public/{bucket_name}"
         self.service_key = settings.SUPABASE_SERVICE_ROLE_KEY
-    
-    def _get_headers(self):
-        return {
-            'Authorization': f'Bearer {self.service_key}',
-            'Content-Type': 'application/octet-stream'
-        }
-    
-    def _open(self, name, mode='rb'):
-        """
-        Retrieve the specified file from storage.
-        """
-        url = f"{self.base_url}/{name}"
-        response = requests.get(url, headers=self._get_headers())
-        
-        if response.status_code == 200:
-            return ContentFile(response.content, name=name)
-        else:
-            raise FileNotFoundError(f"File {name} not found in Supabase storage")
+        # Use local storage for actual file storage
+        super().__init__()
     
     def _save(self, name, content):
         """
-        Save new content to the file named given name.
+        Save file locally and then upload to Supabase
         """
-        url = f"{self.base_url}/{name}"
-        headers = self._get_headers()
+        # Save locally first
+        saved_name = super()._save(name, content)
         
-        # Reset file pointer to beginning
-        content.seek(0)
-        file_content = content.read()
+        # Upload to Supabase if not in DEBUG mode
+        if not settings.DEBUG:
+            self._upload_to_supabase(saved_name)
         
-        response = requests.post(
-            url,
-            data=file_content,
-            headers=headers
-        )
-        
-        if response.status_code in [200, 201]:
-            return name
-        else:
-            raise Exception(f"Failed to upload {name} to Supabase: {response.text}")
+        return saved_name
     
-    def delete(self, name):
+    def _upload_to_supabase(self, name):
         """
-        Delete the specified file from storage.
+        Upload file to Supabase storage
         """
-        url = f"{self.base_url}/{name}"
-        response = requests.delete(url, headers=self._get_headers())
-        
-        if response.status_code not in [200, 204]:
-            raise Exception(f"Failed to delete {name} from Supabase: {response.text}")
-    
-    def exists(self, name):
-        """
-        Return True if a file referenced by the given name already exists.
-        """
-        url = f"{self.base_url}/{name}"
-        response = requests.head(url, headers=self._get_headers())
-        return response.status_code == 200
-    
-    def listdir(self, path):
-        """
-        List the contents of the specified path.
-        """
-        # This is a simplified implementation
-        # For full directory listing, you'd need to use Supabase's list API
-        return [], []
-    
-    def size(self, name):
-        """
-        Return the total size, in bytes, of the file specified by name.
-        """
-        url = f"{self.base_url}/{name}"
-        response = requests.head(url, headers=self._get_headers())
-        
-        if response.status_code == 200:
-            return int(response.headers.get('Content-Length', 0))
-        else:
-            return 0
+        try:
+            local_path = self.path(name)
+            if os.path.exists(local_path):
+                with open(local_path, 'rb') as f:
+                    file_content = f.read()
+                
+                url = f"{settings.SUPABASE_URL}/storage/v1/object/{self.bucket_name}/{name}"
+                headers = {
+                    'Authorization': f'Bearer {self.service_key}',
+                    'apikey': self.service_key,
+                    'Content-Type': 'application/octet-stream'
+                }
+                
+                response = requests.post(url, data=file_content, headers=headers)
+                if response.status_code not in [200, 201]:
+                    print(f"Failed to upload {name} to Supabase: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"Error uploading {name} to Supabase: {str(e)}")
     
     def url(self, name):
         """
         Return an absolute URL where the file's contents can be accessed directly.
+        For production, return Supabase URL. For development, return local URL.
         """
-        return f"{self.base_url}/{name}"
+        if settings.DEBUG:
+            # In development, serve from local storage
+            return super().url(name)
+        else:
+            # In production, serve from Supabase
+            return f"{self.supabase_url}/{name}"
 
 
 class SupabaseMediaStorage(SupabaseStorage):

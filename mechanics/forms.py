@@ -103,7 +103,7 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         from .models import Review
         model = Review
-        fields = ['rating', 'title', 'comment']
+        fields = ['rating', 'title', 'comment', 'images']
         widgets = {
             'rating': forms.Select(attrs={
                 'class': 'form-select',
@@ -118,14 +118,19 @@ class ReviewForm(forms.ModelForm):
                 'rows': 5,
                 'placeholder': 'Write your detailed review here...'
             }),
+            'images': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Make all fields required
-        for field in self.fields.values():
-            field.required = True
+        # Make all fields required except images
+        for field_name, field in self.fields.items():
+            if field_name != 'images':
+                field.required = True
     
     def clean_title(self):
         """Validate review title."""

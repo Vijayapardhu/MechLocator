@@ -380,7 +380,7 @@ def submit_review(request, mechanic_id):
         return redirect('mechanics:mechanic_detail', mechanic_id=mechanic.id)
     
     if request.method == 'POST':
-        form = ReviewForm(request.POST)
+        form = ReviewForm(request.POST, request.FILES)
         if form.is_valid():
             review = form.save(commit=False)
             review.mechanic = mechanic
@@ -411,7 +411,7 @@ def edit_review(request, review_id):
     review = get_object_or_404(Review, id=review_id, customer=request.user)
     
     if request.method == 'POST':
-        form = ReviewForm(request.POST, instance=review)
+        form = ReviewForm(request.POST, request.FILES, instance=review)
         if form.is_valid():
             form.save()
             log_activity(request, 'review', f'Review edited for: {review.mechanic.name}')

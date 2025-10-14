@@ -29,14 +29,57 @@ admin.site.site_header = "MechLocator Administration"
 admin.site.site_title = "MechLocator Admin"
 admin.site.index_title = "Welcome to MechLocator Administration"
 
+# MechanicGallery Inline
+class MechanicGalleryInline(admin.TabularInline):
+    model = MechanicGallery
+    extra = 1
+    fields = ['image', 'caption', 'is_featured', 'image_preview']
+    readonly_fields = ['image_preview']
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 50px;"/>', obj.image.url)
+        return "No image"
+    image_preview.short_description = 'Preview'
+
 # Basic Mechanic Admin
 @admin.register(Mechanic)
 class MechanicAdmin(admin.ModelAdmin):
-    list_display = ['name', 'address', 'contact', 'rating', 'is_active', 'created_at']
+    list_display = ['name', 'address', 'contact', 'rating', 'is_active', 'created_at', 'image_preview', 'profile_preview']
     list_filter = ['is_active', 'rating', 'created_at']
     search_fields = ['name', 'address', 'contact']
     list_editable = ['is_active', 'rating']
     ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'address', 'contact', 'working_hours')
+        }),
+        ('Location', {
+            'fields': ('latitude', 'longitude')
+        }),
+        ('Images', {
+            'fields': ('image', 'profile_image')
+        }),
+        ('Status', {
+            'fields': ('rating', 'is_active')
+        }),
+    )
+    
+    readonly_fields = ['image_preview', 'profile_preview']
+    inlines = [MechanicGalleryInline]
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 50px;"/>', obj.image.url)
+        return "No image"
+    image_preview.short_description = 'Shop Image'
+    
+    def profile_preview(self, obj):
+        if obj.profile_image:
+            return format_html('<img src="{}" style="max-height: 50px;"/>', obj.profile_image.url)
+        return "No image"
+    profile_preview.short_description = 'Profile Image'
 
 # Basic User Profile Admin
 class UserProfileInline(admin.StackedInline):

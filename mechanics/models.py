@@ -214,6 +214,12 @@ class Review(models.Model):
     comment = models.TextField(
         help_text="Detailed review comment"
     )
+    images = models.ImageField(
+        upload_to='review_images/',
+        blank=True,
+        null=True,
+        help_text="Optional photo with review"
+    )
     is_verified = models.BooleanField(
         default=False,
         help_text="Whether this review is verified"

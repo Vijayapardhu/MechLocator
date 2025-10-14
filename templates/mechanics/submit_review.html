@@ -235,7 +235,7 @@
     
     <!-- Review Form -->
     <div class="review-form-container">
-        <form method="post" id="reviewForm">
+        <form method="post" enctype="multipart/form-data" id="reviewForm">
             {% csrf_token %}
             
             <!-- Rating Section -->
@@ -282,6 +282,22 @@
                     </div>
                 {% endif %}
                 <div class="character-count" id="commentCount">0/1000 characters</div>
+            </div>
+            
+            <!-- Image Upload Field -->
+            <div class="form-group">
+                <label for="{{ form.images.id_for_label }}" class="form-label">
+                    Upload Photo (Optional)
+                </label>
+                {{ form.images }}
+                {% if form.images.errors %}
+                    <div class="text-danger mt-2">
+                        {% for error in form.images.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="text-muted">Upload an image related to your review (JPG, PNG, etc.)</small>
             </div>
             
             <!-- Form Actions -->
